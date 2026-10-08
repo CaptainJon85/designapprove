@@ -184,6 +184,15 @@
 </style>
 </helmet>
 
+<sc-if value="{{ booting }}" hint-placeholder-val="{{ false }}">
+  <div class="login">
+    <div class="login-card">
+      <div style="font-family:var(--font-heading);font-weight:500;font-size:22px;letter-spacing:-.02em">Proofline</div>
+      <p style="margin:14px 0 0;font-size:14px;color:var(--color-neutral-600)">Loading workspace…</p>
+    </div>
+  </div>
+</sc-if>
+
 <sc-if value="{{ signedOut }}" hint-placeholder-val="{{ true }}">
   <div class="login">
     <form class="login-card" onSubmit="{{ signIn }}">
@@ -197,10 +206,10 @@
         </div>
       </div>
       <h3 style="font-size:32px;letter-spacing:-.03em;margin:0 0 8px">Sign in</h3>
-      <p style="margin:0 0 22px;font-size:14px;color:var(--color-neutral-600);line-height:1.45">Use the email you were invited with. Clients only see the brands an agency has shared with them.</p>
+      <p style="margin:0 0 22px;font-size:14px;color:var(--color-neutral-600);line-height:1.45">Sign in with the email and password set up for you. Clients only see the brands an agency has shared with them.</p>
       <div class="field" style="margin-bottom:12px">
         <label for="login-email">Email</label>
-        <input id="login-email" class="input" type="email" autocomplete="username" placeholder="you@studio.co" value="{{ loginEmail }}" onInput="{{ onLoginEmail }}">
+        <input id="login-email" class="input" type="email" autocomplete="username" placeholder="you@company.com" value="{{ loginEmail }}" onInput="{{ onLoginEmail }}">
       </div>
       <div class="field" style="margin-bottom:8px">
         <label for="login-password">Password</label>
@@ -210,22 +219,6 @@
         <div style="margin:8px 0 0;padding:10px 12px;border-radius:14px;background:#FFF0EF;color:#4E1414;font-size:13px">{{ loginError }}</div>
       </sc-if>
       <button class="btn btn-primary" type="submit" style="width:100%;margin-top:18px">Continue</button>
-      <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--color-divider)">
-        <div style="font-size:12px;color:var(--color-neutral-600);margin-bottom:10px">Invited to this workspace · password <span style="color:var(--ink);font-weight:500">proofline</span></div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <sc-for list="{{ invited }}" as="p" hint-placeholder-count="3">
-            <button type="button" class="invite" onClick="{{ p.pick }}">
-              <span style="width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--sky);font-size:12px;font-weight:600">{{ p.initials }}</span>
-              <span style="min-width:0">
-                <span style="display:block;font-size:14px;font-weight:500">{{ p.name }}</span>
-                <span style="display:block;font-size:12px;color:var(--color-neutral-600)">{{ p.email }}</span>
-                <span style="display:block;font-size:11px;color:var(--color-neutral-600)">{{ p.access }}</span>
-              </span>
-              <span class="tag tag-neutral" style="margin-left:auto">{{ p.role }}</span>
-            </button>
-          </sc-for>
-        </div>
-      </div>
     </form>
   </div>
 </sc-if>
@@ -340,7 +333,7 @@
           </div>
           <div class="blueprint" style="padding:var(--space-4);display:flex;flex-direction:column;min-height:130px">
             <div style="font-size:11px;color:var(--color-neutral-600)">Median turnaround</div>
-            <div style="font-family:var(--font-heading);font-size:40px;line-height:1;margin-top:auto">6.4<span style="font-size:18px;color:var(--color-neutral-600)">h</span></div>
+            <div style="font-family:var(--font-heading);font-size:40px;line-height:1;margin-top:auto">{{ stats.turnaround }}</div>
             <div style="font-size:12px;color:var(--color-neutral-600);margin-top:4px">submit → decision</div>
           </div>
         </div>
@@ -372,7 +365,7 @@
           <section>
             <h4 style="margin:0 0 var(--space-3)">By brand</h4>
             <sc-if value="{{ brandEmpty }}" hint-placeholder-val="{{ false }}">
-              <div class="blueprint" style="padding:var(--space-5);color:var(--color-neutral-600);font-size:14px">No brands have been shared with you yet. Your agency chooses what you can see.</div>
+              <div class="blueprint" style="padding:var(--space-5);color:var(--color-neutral-600);font-size:14px">{{ emptyBrandCopy }}</div>
             </sc-if>
             <div style="display:flex;flex-direction:column;gap:var(--space-3)">
               <sc-for list="{{ brandCards }}" as="b" hint-placeholder-count="4">
@@ -1010,7 +1003,7 @@
               <tbody>
                 <sc-for list="{{ adminBrands }}" as="b" hint-placeholder-count="4">
                   <tr>
-                    <td><div style="display:flex;align-items:center;gap:9px"><span style="width:24px;height:24px;flex:none;border-radius:50%;display:grid;place-items:center;font-family:var(--font-heading);font-size:11px;color:#10141A;background: {{ b.shade }}">{{ b.tile }}</span><span style="font-weight:500">{{ b.name }}</span></div></td>
+                    <td><div style="display:flex;align-items:center;gap:9px"><span style="width:24px;height:24px;flex:none;border-radius:50%;display:grid;place-items:center;font-family:var(--font-heading);font-size:11px;color:#10141A;background: {{ b.shade }}">{{ b.tile }}</span><input class="input" style="min-height:32px;font-size:13px" value="{{ b.name }}" onInput="{{ b.onName }}"></div></td>
                     <td>{{ b.members }}</td>
                     <td>{{ b.approvers }}</td>
                     <td>{{ b.total }}</td>
@@ -1023,7 +1016,17 @@
         </section>
         <section>
           <h4 style="margin:0 0 var(--space-3)">People &amp; roles</h4>
-          <p style="font-size:12px;color:var(--color-neutral-600);margin-top:0">Agency people can see every customer brand. Set someone to Client and they only see the brands you share below.</p>
+          <p style="font-size:12px;color:var(--color-neutral-600);margin-top:0">Add the agency team and each client. Clients only see the brands you share below.</p>
+          <div class="blueprint" style="padding:var(--space-4);margin-bottom:var(--space-4)">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+              <div class="field" style="flex:1;min-width:140px"><label>Name</label><input class="input" placeholder="Full name" value="{{ inviteName }}" onInput="{{ onInviteName }}"></div>
+              <div class="field" style="flex:1.2;min-width:180px"><label>Email</label><input class="input" type="email" placeholder="name@client.com" value="{{ inviteEmail }}" onInput="{{ onInviteEmail }}"></div>
+              <div class="field" style="width:130px"><label>Type</label><select class="input" value="{{ inviteKind }}" onChange="{{ onInviteKind }}"><option>Agency</option><option>Client</option></select></div>
+              <div class="field" style="flex:1;min-width:140px"><label>Password</label><input class="input" type="text" placeholder="At least 8 characters" value="{{ invitePassword }}" onInput="{{ onInvitePassword }}"></div>
+              <button type="button" class="btn btn-primary" onClick="{{ addPerson }}">Add person</button>
+            </div>
+            <sc-if value="{{ hasInviteError }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;padding:10px 12px;border-radius:14px;background:#FFF0EF;color:#4E1414;font-size:13px">{{ inviteError }}</div></sc-if>
+          </div>
           <div class="blueprint" style="padding:0;overflow-x:auto">
             <table class="table" style="min-width:640px">
               <thead><tr><th>Person</th><sc-for list="{{ brandHeads }}" as="h" hint-placeholder-count="4"><th>{{ h }}</th></sc-for></tr></thead>
@@ -1304,129 +1307,11 @@ window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); 
 class Component extends DCLogic {
   constructor(props){
     super(props);
-    const brands = [
-      {id:'nw', name:'Northwind Coffee', tile:'NW', shade:'#FD8E8C', onShade:'#10141A', mute:'#5A2222', guide:{
-        logoName:'', logoUrl:'', displayFont:'Fraunces', bodyFont:'Outfit',
-        colors:[{id:'nw1',name:'Coral',hex:'#FD8E8C'},{id:'nw2',name:'Espresso',hex:'#3A2418'},{id:'nw3',name:'Cream',hex:'#F6E7D4'},{id:'nw4',name:'Ink',hex:'#10141A'}],
-        dos:['Keep logo clear-space at least the height of the mark','Use coral for emphasis','Left-align headlines'],
-        donts:['Stretch or recolour the logo','Introduce off-brand blues','Set body copy in the display face']}},
-      {id:'vg', name:'Vantage Athletic', tile:'VG', shade:'#83A2DB', onShade:'#10141A', mute:'#1F3152', guide:{
-        logoName:'', logoUrl:'', displayFont:'Barlow Condensed', bodyFont:'Barlow',
-        colors:[{id:'vg1',name:'Track blue',hex:'#83A2DB'},{id:'vg2',name:'Ink',hex:'#10141A'},{id:'vg3',name:'Butter',hex:'#FFCE87'},{id:'vg4',name:'Paper',hex:'#FBFBFB'}],
-        dos:['Use track blue for performance claims','Keep type condensed on headlines'],
-        donts:['Soften the mark into a script','Place the logo on a busy photo without a plate']}},
-      {id:'lm', name:'Lumen Skincare', tile:'LM', shade:'#FFCE87', onShade:'#10141A', mute:'#5A3D10', guide:{
-        logoName:'', logoUrl:'', displayFont:'Newsreader', bodyFont:'DM Sans',
-        colors:[{id:'lm1',name:'Butter',hex:'#FFCE87'},{id:'lm2',name:'Blush',hex:'#FD8E8C'},{id:'lm3',name:'Cream',hex:'#FBF6EE'},{id:'lm4',name:'Ink',hex:'#29292C'}],
-        dos:['Keep photography warm and unretouched','Use blush only for small accents'],
-        donts:['Add clinical blues','Outline the wordmark']}},
-      {id:'mb', name:'Meridian Bank', tile:'MB', shade:'#B9DEFF', onShade:'#10141A', mute:'#24415F', guide:{
-        logoName:'', logoUrl:'', displayFont:'Libre Baskerville', bodyFont:'Urbanist',
-        colors:[{id:'mb1',name:'Sky',hex:'#B9DEFF'},{id:'mb2',name:'Blue',hex:'#83A2DB'},{id:'mb3',name:'Ink',hex:'#10141A'},{id:'mb4',name:'Paper',hex:'#FBFBFB'}],
-        dos:['State rates in the body face','Keep the lockup horizontal'],
-        donts:['Use coral from another brand','Animate the wordmark']}},
-    ];
-    let uid = 1;
-    const mk = (o) => {
-      const d = Object.assign({
-        id:'d'+(uid++), locked:false, campaign:'—', comments:[], history:[],
-        versions:[{n:1, by:o.submitter, at:o.subAt||'2 days ago', note:'Initial submission'}],
-      }, o);
-      if(!d.history.length){ d.history=[{type:'submit', actor:d.submitter, text:'submitted the design', at:d.subAt||'2 days ago', dot:'var(--color-accent)'}]; }
-      return d;
-    };
-    const designs = [
-      mk({brandId:'nw', title:'Cold Brew Season — launch post', kicker:'New for summer', headline:'Slow. Cold. Bold.', sub:'Small-batch cold brew, steeped 18 hours.', cta:'Find a café', platform:'Instagram — Post', aspect:'1 / 1', campaign:'Cold Brew ’26', submitter:'Amara Osei', state:'Submitted', age:2, postD:22, caption:'Cold brew season is officially open ☕ 18 hours in the making. #Northwind',
-        subAt:'2h ago', history:[{type:'submit',actor:'Amara Osei',text:'submitted the design',at:'2h ago',dot:'var(--color-accent)'}]}),
-      mk({brandId:'nw', title:'Oat Flat White — story', kicker:'Barista series', headline:'Creamy, sans dairy.', sub:'Our oat flat white, now in 40 cafés.', cta:'Order ahead', platform:'Instagram — Story', aspect:'9 / 16', submitter:'Amara Osei', state:'In Review', age:1, postD:24, caption:'The oat flat white you asked for. Now pouring.', subAt:'yesterday',
-        comments:[
-          {id:'c1', left:'50%', top:'44%', text:'Headline is clipping on smaller screens — pull the type size down a step.', author:'Jon Falade', at:'1h ago', resolved:false, version:1},
-          {id:'c2', text:'Caption needs the allergen note for oat.', author:'Jon Falade', at:'1h ago', resolved:false, version:1, general:true},
-        ],
-        history:[{type:'submit',actor:'Amara Osei',text:'submitted the design',at:'yesterday',dot:'var(--color-accent)'},{type:'review',actor:'Jon Falade',text:'started reviewing',at:'1h ago',dot:'var(--color-accent-2)'}]}),
-      mk({brandId:'nw', title:'Loyalty perks carousel', kicker:'Rewards', headline:'Your 10th is on us.', sub:'Northwind Rewards, simplified.', cta:'Join free', platform:'Instagram · Facebook', platforms:['Instagram','Facebook'], format:'carousel', aspect:'1 / 1', submitter:'Devin Cole', state:'Changes Requested', age:3, postD:26, caption:'', captionLater:true, subAt:'3 days ago',
-        slides:[{id:'lp1', name:'Slide 1 — reward', caption:''},{id:'lp2', name:'Slide 2 — how it works', caption:''},{id:'lp3', name:'Slide 3 — join', caption:''}],
-        versions:[{n:1,by:'Devin Cole',at:'3 days ago',note:'Initial submission'}],
-        comments:[
-          {id:'c3', left:'30%', top:'62%', text:'Reward tiers are off-brand blue — use the steel accent from guidelines.', author:'Jon Falade', at:'2 days ago', resolved:false, version:1},
-          {id:'c4', left:'70%', top:'30%', text:'Logo clear-space too tight in the corner.', author:'Jon Falade', at:'2 days ago', resolved:false, version:1},
-        ],
-        history:[{type:'submit',actor:'Devin Cole',text:'submitted the design',at:'3 days ago',dot:'var(--color-accent)'},{type:'changes',actor:'Jon Falade',text:'requested changes: “Fix colours + logo clear-space.”',at:'2 days ago',dot:'var(--color-neutral-700)'}]}),
-      mk({brandId:'vg', title:'Marathon plan drop', kicker:'Training', headline:'16 weeks. One start line.', sub:'Free marathon plan in the app.', cta:'Get the plan', platform:'LinkedIn', aspect:'1200 / 628', submitter:'Priya Nair', state:'Resubmitted', age:1, postD:21, caption:'Your race starts today. Free 16-week plan inside.', subAt:'4 days ago',
-        versions:[{n:1,by:'Priya Nair',at:'4 days ago',note:'Initial submission'},{n:2,by:'Priya Nair',at:'6h ago',note:'Addressed feedback: CTA contrast + spacing'}],
-        comments:[
-          {id:'c5', left:'40%', top:'70%', text:'CTA fails contrast on the steel field — lighten it.', author:'Jon Falade', at:'3 days ago', resolved:true, version:1},
-          {id:'c6', text:'Tighten the subhead line length.', author:'Jon Falade', at:'3 days ago', resolved:true, version:1, general:true},
-        ],
-        history:[{type:'submit',actor:'Priya Nair',text:'submitted the design',at:'4 days ago',dot:'var(--color-accent)'},{type:'changes',actor:'Jon Falade',text:'requested changes',at:'3 days ago',dot:'var(--color-neutral-700)'},{type:'resubmit',actor:'Priya Nair',text:'uploaded v2',at:'6h ago',dot:'var(--color-accent)'}]}),
-      mk({brandId:'vg', title:'Recovery day tips', kicker:'Wellness', headline:'Rest is training.', sub:'Five ways to recover smarter.', cta:'Read more', platform:'Instagram — Post', aspect:'1 / 1', submitter:'Marco Lind', state:'Submitted', age:5, postD:23, caption:'Recovery isn’t lazy — it’s the work.', subAt:'5h ago',
-        history:[{type:'submit',actor:'Marco Lind',text:'submitted the design',at:'5h ago',dot:'var(--color-accent)'}]}),
-      mk({brandId:'vg', title:'Summer challenge banner', kicker:'Community', headline:'30 days. Move daily.', sub:'Join 12,000 members this July.', cta:'Sign up', platform:'LinkedIn', aspect:'1200 / 628', submitter:'Priya Nair', state:'Approved', age:1, postD:20, caption:'The July challenge is on. Are you in?', subAt:'2 days ago',
-        locked:true, approvedBy:'You · 1 day ago', approvedAt:'1 day ago',
-        versions:[{n:1,by:'Priya Nair',at:'2 days ago',note:'Initial submission'}],
-        history:[{type:'submit',actor:'Priya Nair',text:'submitted the design',at:'2 days ago',dot:'var(--color-accent)'},{type:'approve',actor:'Jon Falade',text:'approved — safe to post',at:'1 day ago',dot:'var(--color-accent)'}]}),
-      mk({brandId:'lm', title:'Vitamin C serum reveal', kicker:'New product', headline:'Glow, decoded.', sub:'15% vitamin C, clinically tested.', cta:'Shop now', platform:'Instagram — Post', aspect:'1 / 1', submitter:'Lena Fischer', state:'Submitted', age:1, postD:25, caption:'Meet your morning glow. New C-serum.', subAt:'1h ago',
-        history:[{type:'submit',actor:'Lena Fischer',text:'submitted the design',at:'1h ago',dot:'var(--color-accent)'}]}),
-      mk({brandId:'lm', title:'Routine builder story', kicker:'How-to', headline:'Build your ritual.', sub:'Four steps, morning to night.', cta:'Start here', platform:'Instagram — Story', aspect:'9 / 16', submitter:'Lena Fischer', state:'In Review', age:1, postD:27, caption:'Your skin, on a schedule.', subAt:'yesterday',
-        comments:[{id:'c7', left:'55%', top:'40%', text:'Step numbers should use Barlow Condensed, not the body font.', author:'Jon Falade', at:'30m ago', resolved:false, version:1}],
-        history:[{type:'submit',actor:'Lena Fischer',text:'submitted the design',at:'yesterday',dot:'var(--color-accent)'},{type:'review',actor:'Jon Falade',text:'started reviewing',at:'30m ago',dot:'var(--color-accent-2)'}]}),
-      mk({brandId:'lm', title:'SPF reminder post', kicker:'Everyday', headline:'SPF is non-negotiable.', sub:'Rain or shine, reapply.', cta:'Learn why', platform:'Instagram — Post', aspect:'1 / 1', submitter:'Omar Reyes', state:'Approved', age:2, postD:19, caption:'Your daily reminder: SPF, always.', subAt:'3 days ago',
-        locked:true, approvedBy:'You · 2 days ago', approvedAt:'2 days ago',
-        history:[{type:'submit',actor:'Omar Reyes',text:'submitted the design',at:'3 days ago',dot:'var(--color-accent)'},{type:'approve',actor:'Jon Falade',text:'approved — safe to post',at:'2 days ago',dot:'var(--color-accent)'}]}),
-      mk({brandId:'mb', title:'Savings rate announcement', kicker:'Announcement', headline:'Now earning 4.6%.', sub:'On every Meridian savings account.', cta:'Open account', platform:'LinkedIn', aspect:'1200 / 628', submitter:'Grace Kim', state:'Submitted', age:1, postD:21, caption:'Your savings just got a raise. 4.6% APY.', subAt:'3h ago',
-        comments:[],
-        history:[{type:'submit',actor:'Grace Kim',text:'submitted the design',at:'3h ago',dot:'var(--color-accent)'}]}),
-      mk({brandId:'mb', title:'Fraud safety tips', kicker:'Security', headline:'Spot the scam.', sub:'Three signs to never ignore.', cta:'Stay safe', platform:'Instagram — Post', aspect:'1 / 1', submitter:'Grace Kim', state:'Changes Requested', age:2, postD:28, caption:'Three red flags every customer should know.', subAt:'2 days ago',
-        comments:[{id:'c8', text:'Add the required “Member FDIC” disclaimer at the foot.', author:'Jon Falade', at:'1 day ago', resolved:false, version:1, general:true}],
-        history:[{type:'submit',actor:'Grace Kim',text:'submitted the design',at:'2 days ago',dot:'var(--color-accent)'},{type:'changes',actor:'Jon Falade',text:'requested changes: missing disclaimer',at:'1 day ago',dot:'var(--color-neutral-700)'}]}),
-      mk({brandId:'mb', title:'Q3 mortgage explainer', kicker:'Guide', headline:'Rates, in plain words.', sub:'What Q3 means for buyers.', cta:'Read guide', platform:'LinkedIn', aspect:'1200 / 628', submitter:'Tomas Alvarez', state:'Scheduled/Posted', age:4, postD:14, caption:'Everything Q3 rates mean for you.', subAt:'5 days ago',
-        locked:true, approvedBy:'You · 4 days ago', approvedAt:'4 days ago',
-        history:[{type:'submit',actor:'Tomas Alvarez',text:'submitted the design',at:'5 days ago',dot:'var(--color-accent)'},{type:'approve',actor:'Jon Falade',text:'approved — safe to post',at:'4 days ago',dot:'var(--color-accent)'},{type:'sched',actor:'Grace Kim',text:'scheduled for 14 Jul',at:'4 days ago',dot:'var(--color-neutral-600)'}]}),
-    ];
-
-    const plans = [
-      {id:'p1', brandId:'nw', month:'July 2026', status:'In Review', by:'Amara Osei', at:'2 days ago', rows:[
-        {d:22, concept:'Cold brew launch — hero post', platform:'Instagram — Post', campaign:'Cold Brew ’26', art:'In review'},
-        {d:24, concept:'Oat flat white — barista story', platform:'Instagram — Story', campaign:'Barista series', art:'In review'},
-        {d:26, concept:'Loyalty perks carousel', platform:'Instagram — Post', campaign:'Rewards', art:'Changes'},
-        {d:29, concept:'Roastery behind-the-scenes reel', platform:'Instagram — Post', campaign:'Cold Brew ’26', art:'Not started'},
-        {d:31, concept:'Month-end thank you', platform:'X', campaign:'Community', art:'Not started'}]},
-      {id:'p2', brandId:'vg', month:'July 2026', status:'Approved', by:'Priya Nair', at:'6 days ago', approvedBy:'You · 5 days ago', rows:[
-        {d:20, concept:'Summer challenge banner', platform:'LinkedIn', campaign:'Community', art:'Approved'},
-        {d:21, concept:'Marathon plan drop', platform:'LinkedIn', campaign:'Training', art:'In review'},
-        {d:23, concept:'Recovery day tips', platform:'Instagram — Post', campaign:'Wellness', art:'In review'},
-        {d:28, concept:'Member spotlight', platform:'Instagram — Story', campaign:'Community', art:'Not started'}]},
-      {id:'p3', brandId:'lm', month:'July 2026', status:'Draft', by:'Lena Fischer', at:'yesterday', rows:[
-        {d:25, concept:'Vitamin C serum reveal', platform:'Instagram — Post', campaign:'New product', art:'In review'},
-        {d:27, concept:'Routine builder story', platform:'Instagram — Story', campaign:'How-to', art:'In review'},
-        {d:30, concept:'Ingredient deep-dive', platform:'LinkedIn', campaign:'Education', art:'Not started'}]},
-      {id:'p4', brandId:'mb', month:'July 2026', status:'In Review', by:'Grace Kim', at:'3 days ago', rows:[
-        {d:21, concept:'Savings rate announcement', platform:'LinkedIn', campaign:'Announcement', art:'In review'},
-        {d:28, concept:'Fraud safety tips', platform:'Instagram — Post', campaign:'Security', art:'Changes'}]},
-    ];
-
-    const users = [
-      {id:'u1', name:'Jon Falade',   email:'jon@studio.co',    kind:'agency', roles:{nw:'Admin',    vg:'Reviewer', lm:'Reviewer', mb:'Reviewer'}},
-      {id:'u2', name:'Amara Osei',   email:'amara@studio.co',  kind:'agency', roles:{nw:'Designer', vg:'Viewer',   lm:'—',        mb:'—'}},
-      {id:'u3', name:'Priya Nair',   email:'priya@studio.co',  kind:'agency', roles:{nw:'—',        vg:'Designer', lm:'Viewer',   mb:'—'}},
-      {id:'u4', name:'Lena Fischer', email:'lena@studio.co',   kind:'agency', roles:{nw:'—',        vg:'—',        lm:'Designer', mb:'—'}},
-      {id:'u5', name:'Grace Kim',    email:'grace@studio.co',  kind:'client', roles:{nw:'Viewer',   vg:'—',        lm:'—',        mb:'Reviewer'}},
-      {id:'u6', name:'Devin Cole',   email:'devin@studio.co',  kind:'agency', roles:{nw:'Designer', vg:'—',        lm:'—',        mb:'—'}},
-      {id:'u7', name:'Marco Lind',   email:'marco@studio.co',  kind:'agency', roles:{nw:'—',        vg:'Designer', lm:'—',        mb:'—'}},
-      {id:'u8', name:'Omar Reyes',   email:'omar@studio.co',   kind:'agency', roles:{nw:'—',        vg:'—',        lm:'Designer', mb:'—'}},
-      {id:'u9', name:'Tomas Alvarez',email:'tomas@studio.co',  kind:'agency', roles:{nw:'—',        vg:'—',        lm:'—',        mb:'Designer'}},
-      {id:'u10', name:'Maya Chen',   email:'maya@lumen.co',    kind:'client', roles:{nw:'—',        vg:'—',        lm:'Viewer',   mb:'—'}},
-    ];
-
-    const notes = [
-      {id:'n1', type:'submit', title:'Amara Osei', body:'submitted “Cold Brew Season — launch post” for review.', brand:'Northwind Coffee', at:'2h ago', unread:true, designId:'d1', icon:'↑'},
-      {id:'n2', type:'resubmit', title:'Priya Nair', body:'uploaded v2 of “Marathon plan drop”.', brand:'Vantage Athletic', at:'6h ago', unread:true, designId:'d4', icon:'⟳'},
-      {id:'n3', type:'submit', title:'Lena Fischer', body:'submitted “Vitamin C serum reveal”.', brand:'Lumen Skincare', at:'1h ago', unread:true, designId:'d7', icon:'↑'},
-      {id:'n4', type:'submit', title:'Grace Kim', body:'submitted “Savings rate announcement”.', brand:'Meridian Bank', at:'3h ago', unread:true, designId:'d10', icon:'↑'},
-      {id:'n5', type:'aging', title:'Reminder', body:'“Loyalty perks carousel” has waited 3 days with the designer.', brand:'Northwind Coffee', at:'1 day ago', unread:false, designId:'d3', icon:'!'},
-      {id:'n6', type:'sched', title:'Grace Kim', body:'scheduled “Q3 mortgage explainer” for 14 Jul.', brand:'Meridian Bank', at:'4 days ago', unread:false, designId:'d12', icon:'◷'},
-    ];
-    notes.forEach(n=>{ n.audience='approver'; });
+    const brands = [];
+    const designs = [];
+    const plans = [];
+    const users = [];
+    const notes = [];
 
     this.state = {
       view:'dashboard', brandId:null, designId:null, prevView:'dashboard',
@@ -1434,13 +1319,14 @@ class Component extends DCLogic {
       panel:'comments', filter:'all', pinMode:false, planId:null, plans,
       pickerOpen:false, pickerMonth:6, subDay:null,
       draft:null, commentText:'', generalText:'', changesNote:'', toast:null,
-      subBrand:'Northwind Coffee', subTitle:'', subPlatform:'Instagram — Post', subDate:'', subCaption:'',
+      subBrand:'', subTitle:'', subPlatform:'Instagram — Post', subDate:'', subCaption:'',
       subFormat:'single', subPlatforms:['Instagram'], subSlides:[], subCaptionLater:false, subError:'',
       slideIndex:0, captionDraft:null,
       guideOpen:false, guideDraft:null, guideError:'',
       menuOpen:false, sheetOpen:false, installOffer:(function(){ try { const mobile=window.matchMedia('(max-width:860px)').matches; const standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone; if(mobile&&!standalone&&!localStorage.getItem('pwa-dismiss')) return /iphone|ipad|ipod/i.test(navigator.userAgent)?'ios':'android'; } catch(err) {} return ''; })(),
       brands, designs, users, notes, tick:0,
-      authed:false, sessionId:null, loginEmail:'', loginPassword:'', loginError:'',
+      authed:false, ready:false, booting:true, sessionId:null, loginEmail:'', loginPassword:'', loginError:'',
+      inviteName:'', inviteEmail:'', inviteKind:'Agency', invitePassword:'', inviteError:'',
     };
     this.STATE_META = {
       'Draft':{label:'Draft', cls:'tag-neutral'},
@@ -1454,7 +1340,41 @@ class Component extends DCLogic {
     };
   }
 
-  bump(){ this.setState(s=>({tick:s.tick+1})); }
+  componentDidMount(){ this.restore(); }
+  bump(){ this.setState(s=>({tick:s.tick+1})); this.queueSave(); }
+  queueSave(){
+    if(!this.state.authed || !this.state.ready) return;
+    clearTimeout(this._save);
+    this._save=setTimeout(()=>this.saveWorkspace(), 350);
+  }
+  saveWorkspace(){
+    if(!this.state.authed || !this.state.ready) return;
+    const s=this.state;
+    const body={
+      brands:s.brands, designs:s.designs, plans:s.plans, notes:s.notes,
+      users:(s.users||[]).map(u=>({id:u.id, name:u.name, email:u.email, kind:u.kind, master:!!u.master, roles:u.roles||{}}))
+    };
+    fetch('./api/workspace', {method:'PUT', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
+      .then(r=>{ if(!r.ok) this.flash('Could not save. Try again.'); })
+      .catch(()=>this.flash('Could not save. Try again.'));
+  }
+  applyWorkspace(data){
+    const ws=data.workspace||{};
+    this.setState({
+      authed:true, ready:true, booting:false, sessionId:data.user.id,
+      users:ws.users||[], brands:ws.brands||[], designs:ws.designs||[], plans:ws.plans||[], notes:ws.notes||[],
+      loginPassword:'', loginError:'', view:'dashboard', brandId:null, designId:null, menuOpen:false
+    });
+  }
+  restore(){
+    fetch('./api/workspace', {credentials:'include'})
+      .then(r=>r.json().then(data=>({ok:r.ok, status:r.status, data})))
+      .then(({ok, status, data})=>{
+        if(status===401 || !ok || !data.user){ this.setState({booting:false, authed:false}); return; }
+        this.applyWorkspace(data);
+      })
+      .catch(()=>this.setState({booting:false, authed:false}));
+  }
   flash(msg){ this.setState({toast:msg}); clearTimeout(this._t); this._t=setTimeout(()=>this.setState({toast:null}), 2200); }
 
   brand(id){ return this.state.brands.find(b=>b.id===id); }
@@ -1463,6 +1383,7 @@ class Component extends DCLogic {
 
   // navigation
   roleLine(user){
+    if(user.master) return 'Master admin';
     if(user.kind==='client'){
       const names=this.sharedNames(user);
       return names ? 'Client · '+names : 'Client';
@@ -1489,17 +1410,23 @@ class Component extends DCLogic {
   guardBrand(id){ return this.canSeeBrand(this.currentUser(), id); }
   onLoginEmail(e){ this.setState({loginEmail:e.target.value, loginError:''}); }
   onLoginPassword(e){ this.setState({loginPassword:e.target.value, loginError:''}); }
-  pickInvite(email){ this.setState({loginEmail:email, loginError:''}); }
   signIn(e){
     if(e && e.preventDefault) e.preventDefault();
     const email = (this.state.loginEmail||'').trim().toLowerCase();
     const password = this.state.loginPassword||'';
-    const user = this.state.users.find(u=>u.email.toLowerCase()===email);
-    if(!user){ this.setState({loginError:"That email hasn't been invited to this workspace."}); return; }
-    if(password!=='proofline'){ this.setState({loginError:'Password doesn’t match. Invited users sign in with proofline.'}); return; }
-    this.setState({authed:true, sessionId:user.id, loginError:'', loginPassword:'', view:'dashboard', brandId:null, designId:null, menuOpen:false});
+    if(!email || !password){ this.setState({loginError:'Enter the email and password you were given.'}); return; }
+    fetch('./api/login', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, password})})
+      .then(r=>r.json().then(data=>({ok:r.ok, data})))
+      .then(({ok, data})=>{
+        if(!ok || !data.user){ this.setState({loginError:data.error||'Email or password doesn’t match.'}); return; }
+        this.applyWorkspace(data);
+      })
+      .catch(()=>this.setState({loginError:'Sign-in is unavailable right now.'}));
   }
-  signOut(){ this.setState({authed:false, sessionId:null, loginPassword:'', loginError:'', view:'dashboard', menuOpen:false}); }
+  signOut(){
+    fetch('./api/logout', {method:'POST', credentials:'include'}).catch(()=>{});
+    this.setState({authed:false, ready:false, sessionId:null, loginPassword:'', loginError:'', view:'dashboard', menuOpen:false, users:[], brands:[], designs:[], plans:[], notes:[], brandId:null, designId:null});
+  }
 
   toggleMenu(){ this.setState(s=>({menuOpen:!s.menuOpen})); }
   closeMenu(){ this.setState({menuOpen:false}); }
@@ -1515,7 +1442,7 @@ class Component extends DCLogic {
   goNotifications(){ this.setState({view:'notifications', menuOpen:false}); }
   goAdmin(){
     const me=this.currentUser();
-    if(!me || me.kind==='client' || !Object.values(me.roles||{}).includes('Admin')) return;
+    if(!me || me.kind==='client' || !(me.master || Object.values(me.roles||{}).includes('Admin'))) return;
     this.setState({view:'admin', menuOpen:false});
   }
   selectBrand(id){ if(!this.guardBrand(id)) return; this.setState({brandId:id, view:'queue', filter:'all', menuOpen:false}); }
@@ -1540,7 +1467,7 @@ class Component extends DCLogic {
   visibleNotes(){
     const me=this.currentUser();
     if(!me) return [];
-    const approver=Object.values(me.roles||{}).some(r=>r==='Admin'||r==='Reviewer');
+    const approver=!!me.master || Object.values(me.roles||{}).some(r=>r==='Admin'||r==='Reviewer');
     const allowed=new Set(this.visibleBrands().map(b=>b.name));
     return this.state.notes.filter(n=>{
       if(me.kind==='client' && n.brand && !allowed.has(n.brand)) return false;
@@ -1727,9 +1654,33 @@ class Component extends DCLogic {
 
   // admin
   setRole(uid, bid, role){ const u=this.state.users.find(x=>x.id===uid); if(!u) return; u.roles[bid]=role; this.bump(); this.flash('Role updated'); }
+  blankBrand(){ return {id:'', name:'', tile:'', shade:'#B9DEFF', onShade:'#10141A', mute:'#24415F', guide:{logoName:'', logoUrl:'', colors:[], displayFont:'Urbanist', bodyFont:'Urbanist', dos:[], donts:[]}}; }
+  renameBrand(id, name){ const b=this.brand(id); if(!b) return; b.name=name; this.bump(); }
+  onInviteName(e){ this.setState({inviteName:e.target.value, inviteError:''}); }
+  onInviteEmail(e){ this.setState({inviteEmail:e.target.value, inviteError:''}); }
+  onInviteKind(e){ this.setState({inviteKind:e.target.value}); }
+  onInvitePassword(e){ this.setState({invitePassword:e.target.value, inviteError:''}); }
+  addPerson(){
+    const name=(this.state.inviteName||'').trim();
+    const email=(this.state.inviteEmail||'').trim().toLowerCase();
+    const password=this.state.invitePassword||'';
+    const kind=this.state.inviteKind==='Client'?'client':'agency';
+    if(!name || !email || password.length<8){ this.setState({inviteError:'Enter a name, email, and a password of at least 8 characters.'}); return; }
+    fetch('./api/users', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name, email, password, kind})})
+      .then(r=>r.json().then(data=>({ok:r.ok, data})))
+      .then(({ok, data})=>{
+        if(!ok || !data.user){ this.setState({inviteError:data.error||'Could not add that person.'}); return; }
+        this.state.users.push(data.user);
+        this.setState({inviteName:'', inviteEmail:'', invitePassword:'', inviteError:''});
+        this.bump();
+        this.flash(name+' can sign in with the password you set.');
+      })
+      .catch(()=>this.setState({inviteError:'Could not add that person.'}));
+  }
   setKind(uid, kind){
     const u=this.state.users.find(x=>x.id===uid);
     if(!u) return;
+    if(u.master){ this.flash('The master admin stays on the agency team.'); return; }
     u.kind = kind==='Client' ? 'client' : 'agency';
     this.bump();
     this.flash(u.kind==='client' ? u.name+' is a client. Share only the brands they should see.' : u.name+' is on the agency team.');
@@ -1743,7 +1694,7 @@ class Component extends DCLogic {
     this.bump();
     this.flash(on ? b.name+' is hidden from '+u.name : u.name+' can see '+b.name);
   }
-  createBrand(){ const n=this.state.brands.length+1; const name='New Brand '+n; this.state.brands.push({id:'b'+Date.now(), name, tile:'N'+n, shade:'#83A2DB', onShade:'#10141A', mute:'#1F3152', guide:{logoName:'', logoUrl:'', colors:[], displayFont:'Urbanist', bodyFont:'Urbanist', dos:[], donts:[]}}); this.state.users.forEach(u=>{ u.roles[this.state.brands[this.state.brands.length-1].id]='—'; }); this.bump(); this.flash('Brand workspace created'); }
+  createBrand(){ const n=this.state.brands.length+1; const shades=['#FD8E8C','#83A2DB','#FFCE87','#B9DEFF']; const id='b'+Date.now(); const name='New Brand '+n; this.state.brands.push({id, name, tile:('B'+n).slice(0,2), shade:shades[(n-1)%shades.length], onShade:'#10141A', mute:'#1F3152', guide:{logoName:'', logoUrl:'', colors:[], displayFont:'Urbanist', bodyFont:'Urbanist', dos:[], donts:[]}}); this.state.users.forEach(u=>{ u.roles[id]=u.master?'Admin':'—'; }); this.bump(); this.flash('Brand workspace created'); }
 
   fontStack(name){ const n=(name||'Urbanist').replace(/'/g,''); return "'"+n+"',system-ui,sans-serif"; }
   normHex(v){ let s=(v||'').trim(); if(!s.startsWith('#')) s='#'+s; if(/^#[0-9a-fA-F]{3}$/.test(s)) s='#'+s.slice(1).split('').map(ch=>ch+ch).join(''); if(/^#[0-9a-fA-F]{6}$/.test(s)) return s.toUpperCase(); return ''; }
@@ -1753,7 +1704,7 @@ class Component extends DCLogic {
     if((s.view==='review'||s.view==='compare') && d && this.guardBrand(d.brandId)) return this.brand(d.brandId);
     if(s.brandId && this.guardBrand(s.brandId)) return this.brand(s.brandId);
     const visible=this.visibleBrands();
-    return visible[0] || s.brands[0];
+    return visible[0] || s.brands[0] || this.blankBrand();
   }
   openGuide(){
     const b=this.guideBrandObj();
@@ -1823,7 +1774,7 @@ class Component extends DCLogic {
     const meEarly = s.users.find(u=>u.id===s.sessionId) || null;
     const visibleBrands = s.brands.filter(b=>this.canSeeBrand(meEarly, b.id));
     const visibleIds = new Set(visibleBrands.map(b=>b.id));
-    const canAdmin = !!(meEarly && meEarly.kind!=='client' && Object.values(meEarly.roles||{}).includes('Admin'));
+    const canAdmin = !!(meEarly && meEarly.kind!=='client' && (meEarly.master || Object.values(meEarly.roles||{}).includes('Admin')));
     const clientView = !!(meEarly && meEarly.kind==='client');
     const safeBrandId = s.brandId && visibleIds.has(s.brandId) ? s.brandId : null;
     let view = s.view;
@@ -1957,7 +1908,7 @@ class Component extends DCLogic {
     const unreadCount = myNotes.filter(n=>n.unread).length;
 
     // admin
-    const adminBrands = s.brands.map(b=>({ name:b.name, tile:b.tile, shade:b.shade,
+    const adminBrands = s.brands.map(b=>({ name:b.name, tile:b.tile, shade:b.shade, onName:(e)=>this.renameBrand(b.id, e.target.value),
       members: s.users.filter(u=>u.roles[b.id] && u.roles[b.id]!=='—').length,
       approvers: s.users.filter(u=>['Admin','Reviewer'].includes(u.roles[b.id])).length,
       total: s.designs.filter(d=>d.brandId===b.id).length }));
@@ -2000,7 +1951,7 @@ class Component extends DCLogic {
 
 
     // feed preview (current brand)
-    const cbObj = (cur? this.brand(cur) : null) || visibleBrands[0] || s.brands[0];
+    const cbObj = (cur? this.brand(cur) : null) || visibleBrands[0] || s.brands[0] || this.blankBrand();
     const feedRaw = s.designs.filter(x=>x.brandId===cur && ['Approved','Scheduled/Posted'].includes(x.state))
       .slice().sort((a,b)=>(b.postD||0)-(a.postD||0));
     const feedList = feedRaw.map(x=>({ shade:this.brand(x.brandId).shade, onShade:this.brand(x.brandId).onShade, mute:this.brand(x.brandId).mute, kicker:x.kicker, headline:x.headline, day: x.postD? (x.postD+' Jul'):'TBD', open:()=>this.openDesign(x.id) }));
@@ -2044,19 +1995,13 @@ class Component extends DCLogic {
     const openCommentsWarn = (()=>{ if(!d) return ''; const n=d.comments.filter(c=>!c.resolved).length; if(!n) return '';
       return n===1 ? 'Heads up: 1 comment is still open on this design.' : 'Heads up: '+n+' comments are still open on this design.'; })();
 
-    const me = s.users.find(u=>u.id===s.sessionId) || s.users[0];
-    const initials = me.name.split(' ').map(p=>p[0]).slice(0,2).join('');
-    const invited = s.users.map(u=>({
-      name:u.name, email:u.email, role: u.kind==='client' ? 'Client' : this.roleLine(u),
-      access: u.kind==='client' ? (this.sharedNames(u)||'No brands shared') : 'Agency · every brand',
-      initials:u.name.split(' ').map(p=>p[0]).slice(0,2).join(''),
-      pick:()=>this.pickInvite(u.email)
-    }));
+    const me = s.users.find(u=>u.id===s.sessionId) || {name:'', email:'', kind:'agency', roles:{}, master:false};
+    const initials = me.name ? me.name.split(' ').map(p=>p[0]).slice(0,2).join('') : '';
 
     return {
-      signedIn:!!s.authed, signedOut:!s.authed,
+      booting:!!s.booting, signedIn:!!s.authed, signedOut:!s.authed && !s.booting,
       loginEmail:s.loginEmail, loginPassword:s.loginPassword, loginError:s.loginError, hasLoginError:!!s.loginError,
-      invited, signIn:(e)=>this.signIn(e), signOut:()=>this.signOut(),
+      signIn:(e)=>this.signIn(e), signOut:()=>this.signOut(),
       onLoginEmail:(e)=>this.onLoginEmail(e), onLoginPassword:(e)=>this.onLoginPassword(e),
       session:{ name:me.name, role:this.roleLine(me), initials, email:me.email },
       nav:{ dashboard:view==='dashboard'?'on':'', notifications:view==='notifications'?'on':'', admin:view==='admin'?'on':'',
@@ -2070,7 +2015,8 @@ class Component extends DCLogic {
       brandNav, brandCount:visibleBrands.length,
       unread:{any:unreadCount>0, count:unreadCount},
       page,
-      stats:{ awaiting:awaitingRaw.length, changes:s.designs.filter(d=>visibleIds.has(d.brandId)&&d.state==='Changes Requested').length, approved:s.designs.filter(d=>visibleIds.has(d.brandId)&&d.state==='Approved').length },
+      emptyBrandCopy: canAdmin ? 'No client brands yet. Create one in Admin & roles, then choose who can see it.' : 'No brands have been shared with you yet. Your agency chooses what you can see.',
+      stats:{ awaiting:awaitingRaw.length, changes:s.designs.filter(d=>visibleIds.has(d.brandId)&&d.state==='Changes Requested').length, approved:s.designs.filter(d=>visibleIds.has(d.brandId)&&d.state==='Approved').length, turnaround:'—' },
       awaitingList, awaitingEmpty:awaitingList.length===0,
       brandCards,
       queueList, queueEmpty:queueList.length===0, queueCountLabel: queueList.length+' design'+(queueList.length===1?'':'s'),
@@ -2110,6 +2056,10 @@ class Component extends DCLogic {
       openReject:()=>this.openReject(), confirmReject:()=>this.confirmReject(), rejectOpen:s.rejectOpen,
       notifList, notifEmpty:notifList.length===0, notifSummary: unreadCount+' unread · '+myNotes.length+' for you', markAllRead:()=>this.markAllRead(),
       adminBrands, brandHeads, userRows, clientAccess, noClients:clientAccess.length===0, createBrand:()=>this.createBrand(),
+      inviteName:s.inviteName, inviteEmail:s.inviteEmail, inviteKind:s.inviteKind||'Agency', invitePassword:s.invitePassword,
+      inviteError:s.inviteError||'', hasInviteError:!!s.inviteError,
+      onInviteName:(e)=>this.onInviteName(e), onInviteEmail:(e)=>this.onInviteEmail(e), onInviteKind:(e)=>this.onInviteKind(e), onInvitePassword:(e)=>this.onInvitePassword(e),
+      addPerson:()=>this.addPerson(),
       // handlers
       goDashboard:()=>this.goDashboard(), goNotifications:()=>this.goNotifications(), goAdmin:()=>this.goAdmin(),
       openDesign:(id)=>this.openDesign(id), back:()=>this.back(),
