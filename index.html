@@ -197,7 +197,7 @@
         </div>
       </div>
       <h3 style="font-size:32px;letter-spacing:-.03em;margin:0 0 8px">Sign in</h3>
-      <p style="margin:0 0 22px;font-size:14px;color:var(--color-neutral-600);line-height:1.45">Use the email you were invited with. Your role is already set for each brand.</p>
+      <p style="margin:0 0 22px;font-size:14px;color:var(--color-neutral-600);line-height:1.45">Use the email you were invited with. Clients only see the brands an agency has shared with them.</p>
       <div class="field" style="margin-bottom:12px">
         <label for="login-email">Email</label>
         <input id="login-email" class="input" type="email" autocomplete="username" placeholder="you@studio.co" value="{{ loginEmail }}" onInput="{{ onLoginEmail }}">
@@ -219,6 +219,7 @@
               <span style="min-width:0">
                 <span style="display:block;font-size:14px;font-weight:500">{{ p.name }}</span>
                 <span style="display:block;font-size:12px;color:var(--color-neutral-600)">{{ p.email }}</span>
+                <span style="display:block;font-size:11px;color:var(--color-neutral-600)">{{ p.access }}</span>
               </span>
               <span class="tag tag-neutral" style="margin-left:auto">{{ p.role }}</span>
             </button>
@@ -247,17 +248,19 @@
     <div style="font-size:11px;color:var(--color-neutral-600);padding:2px 10px 4px">Overview</div>
     <button class="navbtn {{ nav.dashboard }}" onClick="{{ goDashboard }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-      Owner dashboard
+      {{ dashLabel }}
     </button>
     <button class="navbtn {{ nav.notifications }}" onClick="{{ goNotifications }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
       Notifications
       <sc-if value="{{ unread.any }}" hint-placeholder-val="{{ true }}"><span style="margin-left:auto;background:var(--red);color:#fff;border-radius:999px;font-size:11px;min-width:20px;height:20px;display:grid;place-items:center;padding:0 5px">{{ unread.count }}</span></sc-if>
     </button>
+    <sc-if value="{{ canAdmin }}" hint-placeholder-val="{{ false }}">
     <button class="navbtn {{ nav.admin }}" onClick="{{ goAdmin }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2Z"/><circle cx="12" cy="12" r="3"/></svg>
       Admin &amp; roles
     </button>
+    </sc-if>
 
     <div style="font-size:11px;color:var(--color-neutral-600);padding:var(--space-3) 10px 4px;display:flex;justify-content:space-between;align-items:center">Brands<span style="font-size:11px;color:var(--color-neutral-500)">{{ brandCount }}</span></div>
     <sc-for list="{{ brandNav }}" as="b" hint-placeholder-count="4">
@@ -323,7 +326,7 @@
           <div class="blueprint" style="padding:var(--space-4);display:flex;flex-direction:column;min-height:130px">
             <div style="font-size:11px;color:var(--color-neutral-600)">Awaiting you</div>
             <div style="font-family:var(--font-heading);font-size:40px;line-height:1;margin-top:auto">{{ stats.awaiting }}</div>
-            <div style="font-size:12px;color:var(--color-neutral-600);margin-top:4px">across all brands</div>
+            <div style="font-size:12px;color:var(--color-neutral-600);margin-top:4px">{{ scopeLine }}</div>
           </div>
           <div class="blueprint" style="padding:var(--space-4);display:flex;flex-direction:column;min-height:130px">
             <div style="font-size:11px;color:var(--color-neutral-600)">Changes requested</div>
@@ -346,7 +349,7 @@
           <section>
             <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:var(--space-3)">
               <h4 style="margin:0">Awaiting your review</h4>
-              <span style="font-size:12px;color:var(--color-neutral-600)">oldest first · all brands</span>
+              <span style="font-size:12px;color:var(--color-neutral-600)">{{ scopeQueue }}</span>
             </div>
             <div class="blueprint" style="padding:0;overflow-x:auto">
               <table class="table" style="min-width:0">
@@ -368,6 +371,9 @@
 
           <section>
             <h4 style="margin:0 0 var(--space-3)">By brand</h4>
+            <sc-if value="{{ brandEmpty }}" hint-placeholder-val="{{ false }}">
+              <div class="blueprint" style="padding:var(--space-5);color:var(--color-neutral-600);font-size:14px">No brands have been shared with you yet. Your agency chooses what you can see.</div>
+            </sc-if>
             <div style="display:flex;flex-direction:column;gap:var(--space-3)">
               <sc-for list="{{ brandCards }}" as="b" hint-placeholder-count="4">
                 <div class="blueprint row-open" style="padding:var(--space-3)" onClick="{{ b.open }}">
@@ -1017,14 +1023,14 @@
         </section>
         <section>
           <h4 style="margin:0 0 var(--space-3)">People &amp; roles</h4>
-          <p style="font-size:12px;color:var(--color-neutral-600);margin-top:0">Roles are assigned per brand. Change a role inline — only Reviewers &amp; Approvers can sign off.</p>
+          <p style="font-size:12px;color:var(--color-neutral-600);margin-top:0">Agency people can see every customer brand. Set someone to Client and they only see the brands you share below.</p>
           <div class="blueprint" style="padding:0;overflow-x:auto">
             <table class="table" style="min-width:640px">
               <thead><tr><th>Person</th><sc-for list="{{ brandHeads }}" as="h" hint-placeholder-count="4"><th>{{ h }}</th></sc-for></tr></thead>
               <tbody>
                 <sc-for list="{{ userRows }}" as="u" hint-placeholder-count="5">
                   <tr>
-                    <td><div style="font-weight:500">{{ u.name }}</div><div style="font-size:11px;color:var(--color-neutral-600)">{{ u.email }}</div></td>
+                    <td><div style="font-weight:500">{{ u.name }}</div><div style="font-size:11px;color:var(--color-neutral-600)">{{ u.email }}</div><select class="input" style="min-height:32px;font-size:12px;margin-top:6px" value="{{ u.kind }}" onChange="{{ u.setKind }}"><option>Agency</option><option>Client</option></select></td>
                     <sc-for list="{{ u.cells }}" as="c" hint-placeholder-count="4">
                       <td><select class="input" style="min-height:32px;font-size:12px" value="{{ c.role }}" onChange="{{ c.set }}"><option>Admin</option><option>Reviewer</option><option>Designer</option><option>Viewer</option><option>—</option></select></td>
                     </sc-for>
@@ -1032,6 +1038,41 @@
                 </sc-for>
               </tbody>
             </table>
+          </div>
+        </section>
+        <section style="margin-top:var(--space-8)">
+          <h4 style="margin:0 0 var(--space-3)">Client brand access</h4>
+          <p style="font-size:12px;color:var(--color-neutral-600);margin-top:0">Choose the brands each client can open. Other customer brands stay hidden, including their names.</p>
+          <sc-if value="{{ noClients }}" hint-placeholder-val="{{ false }}">
+            <div class="blueprint" style="padding:var(--space-5);color:var(--color-neutral-600);font-size:14px">No clients yet. Mark a person as Client in People &amp; roles.</div>
+          </sc-if>
+          <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+            <sc-for list="{{ clientAccess }}" as="c" hint-placeholder-count="2">
+              <div class="blueprint" style="padding:var(--space-4)">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="min-width:0">
+                    <div style="font-weight:500">{{ c.name }}</div>
+                    <div style="font-size:12px;color:var(--color-neutral-600)">{{ c.email }}</div>
+                  </div>
+                  <span class="tag tag-neutral" style="margin-left:auto">{{ c.summary }}</span>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">
+                  <sc-for list="{{ c.brands }}" as="b" hint-placeholder-count="4">
+                    <button type="button" class="{{ b.cls }}" onClick="{{ b.toggle }}">{{ b.name }}</button>
+                  </sc-for>
+                </div>
+                <sc-if value="{{ c.hasBrands }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:14px">
+                    <sc-for list="{{ c.granted }}" as="g" hint-placeholder-count="2">
+                      <div class="field" style="min-width:150px;flex:1">
+                        <label>{{ g.name }}</label>
+                        <select class="input" style="min-height:36px;font-size:13px" value="{{ g.role }}" onChange="{{ g.set }}"><option>Reviewer</option><option>Viewer</option></select>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
           </div>
         </section>
       </div>
@@ -1365,15 +1406,16 @@ class Component extends DCLogic {
     ];
 
     const users = [
-      {id:'u1', name:'Jon Falade',   email:'jon@studio.co',   roles:{nw:'Admin',    vg:'Reviewer', lm:'Reviewer', mb:'Reviewer'}},
-      {id:'u2', name:'Amara Osei',   email:'amara@studio.co', roles:{nw:'Designer', vg:'Viewer',   lm:'—',        mb:'—'}},
-      {id:'u3', name:'Priya Nair',   email:'priya@studio.co', roles:{nw:'—',        vg:'Designer', lm:'Viewer',   mb:'—'}},
-      {id:'u4', name:'Lena Fischer', email:'lena@studio.co',  roles:{nw:'—',        vg:'—',        lm:'Designer', mb:'—'}},
-      {id:'u5', name:'Grace Kim',    email:'grace@studio.co', roles:{nw:'Viewer',   vg:'—',        lm:'—',        mb:'Reviewer'}},
-      {id:'u6', name:'Devin Cole',   email:'devin@studio.co', roles:{nw:'Designer', vg:'—',        lm:'—',        mb:'—'}},
-      {id:'u7', name:'Marco Lind',   email:'marco@studio.co', roles:{nw:'—',        vg:'Designer', lm:'—',        mb:'—'}},
-      {id:'u8', name:'Omar Reyes',   email:'omar@studio.co',  roles:{nw:'—',        vg:'—',        lm:'Designer', mb:'—'}},
-      {id:'u9', name:'Tomas Alvarez',email:'tomas@studio.co', roles:{nw:'—',        vg:'—',        lm:'—',        mb:'Designer'}},
+      {id:'u1', name:'Jon Falade',   email:'jon@studio.co',    kind:'agency', roles:{nw:'Admin',    vg:'Reviewer', lm:'Reviewer', mb:'Reviewer'}},
+      {id:'u2', name:'Amara Osei',   email:'amara@studio.co',  kind:'agency', roles:{nw:'Designer', vg:'Viewer',   lm:'—',        mb:'—'}},
+      {id:'u3', name:'Priya Nair',   email:'priya@studio.co',  kind:'agency', roles:{nw:'—',        vg:'Designer', lm:'Viewer',   mb:'—'}},
+      {id:'u4', name:'Lena Fischer', email:'lena@studio.co',   kind:'agency', roles:{nw:'—',        vg:'—',        lm:'Designer', mb:'—'}},
+      {id:'u5', name:'Grace Kim',    email:'grace@studio.co',  kind:'client', roles:{nw:'Viewer',   vg:'—',        lm:'—',        mb:'Reviewer'}},
+      {id:'u6', name:'Devin Cole',   email:'devin@studio.co',  kind:'agency', roles:{nw:'Designer', vg:'—',        lm:'—',        mb:'—'}},
+      {id:'u7', name:'Marco Lind',   email:'marco@studio.co',  kind:'agency', roles:{nw:'—',        vg:'Designer', lm:'—',        mb:'—'}},
+      {id:'u8', name:'Omar Reyes',   email:'omar@studio.co',   kind:'agency', roles:{nw:'—',        vg:'—',        lm:'Designer', mb:'—'}},
+      {id:'u9', name:'Tomas Alvarez',email:'tomas@studio.co',  kind:'agency', roles:{nw:'—',        vg:'—',        lm:'—',        mb:'Designer'}},
+      {id:'u10', name:'Maya Chen',   email:'maya@lumen.co',    kind:'client', roles:{nw:'—',        vg:'—',        lm:'Viewer',   mb:'—'}},
     ];
 
     const notes = [
@@ -1421,6 +1463,10 @@ class Component extends DCLogic {
 
   // navigation
   roleLine(user){
+    if(user.kind==='client'){
+      const names=this.sharedNames(user);
+      return names ? 'Client · '+names : 'Client';
+    }
     const roles = Object.values(user.roles||{});
     if(roles.includes('Admin')) return 'Admin';
     if(roles.includes('Reviewer')) return 'Reviewer';
@@ -1428,6 +1474,19 @@ class Component extends DCLogic {
     if(roles.includes('Viewer')) return 'Viewer';
     return 'No brand access';
   }
+  sharedNames(user){
+    return this.state.brands.filter(b=>this.canSeeBrand(user, b.id)).map(b=>b.name.split(' ')[0]).join(', ');
+  }
+  canSeeBrand(user, brandId){
+    if(!user || user.kind!=='client') return true;
+    const role=(user.roles||{})[brandId];
+    return !!role && role!=='—';
+  }
+  visibleBrands(){
+    const me=this.currentUser();
+    return this.state.brands.filter(b=>this.canSeeBrand(me, b.id));
+  }
+  guardBrand(id){ return this.canSeeBrand(this.currentUser(), id); }
   onLoginEmail(e){ this.setState({loginEmail:e.target.value, loginError:''}); }
   onLoginPassword(e){ this.setState({loginPassword:e.target.value, loginError:''}); }
   pickInvite(email){ this.setState({loginEmail:email, loginError:''}); }
@@ -1438,7 +1497,7 @@ class Component extends DCLogic {
     const user = this.state.users.find(u=>u.email.toLowerCase()===email);
     if(!user){ this.setState({loginError:"That email hasn't been invited to this workspace."}); return; }
     if(password!=='proofline'){ this.setState({loginError:'Password doesn’t match. Invited users sign in with proofline.'}); return; }
-    this.setState({authed:true, sessionId:user.id, loginError:'', loginPassword:'', view:'dashboard'});
+    this.setState({authed:true, sessionId:user.id, loginError:'', loginPassword:'', view:'dashboard', brandId:null, designId:null, menuOpen:false});
   }
   signOut(){ this.setState({authed:false, sessionId:null, loginPassword:'', loginError:'', view:'dashboard', menuOpen:false}); }
 
@@ -1454,14 +1513,18 @@ class Component extends DCLogic {
 
   goDashboard(){ this.setState({view:'dashboard', menuOpen:false}); }
   goNotifications(){ this.setState({view:'notifications', menuOpen:false}); }
-  goAdmin(){ this.setState({view:'admin', menuOpen:false}); }
-  selectBrand(id){ this.setState({brandId:id, view:'queue', filter:'all', menuOpen:false}); }
-  goQueue(id){ this.setState({brandId:id, view:'queue', menuOpen:false}); }
-  goApproved(id){ this.setState({brandId:id, view:'approved', menuOpen:false}); }
-  goCalendar(id){ this.setState({brandId:id, view:'calendar', menuOpen:false}); }
-  goFeed(id){ this.setState({brandId:id, view:'feed', menuOpen:false}); }
-  goPlans(id){ this.setState({brandId:id, view:'plans', menuOpen:false}); }
-  openPlan(id){ const p=this.state.plans.find(x=>x.id===id); this.setState({view:'planDetail', planId:id, brandId:p.brandId}); }
+  goAdmin(){
+    const me=this.currentUser();
+    if(!me || me.kind==='client' || !Object.values(me.roles||{}).includes('Admin')) return;
+    this.setState({view:'admin', menuOpen:false});
+  }
+  selectBrand(id){ if(!this.guardBrand(id)) return; this.setState({brandId:id, view:'queue', filter:'all', menuOpen:false}); }
+  goQueue(id){ if(!this.guardBrand(id)) return; this.setState({brandId:id, view:'queue', menuOpen:false}); }
+  goApproved(id){ if(!this.guardBrand(id)) return; this.setState({brandId:id, view:'approved', menuOpen:false}); }
+  goCalendar(id){ if(!this.guardBrand(id)) return; this.setState({brandId:id, view:'calendar', menuOpen:false}); }
+  goFeed(id){ if(!this.guardBrand(id)) return; this.setState({brandId:id, view:'feed', menuOpen:false}); }
+  goPlans(id){ if(!this.guardBrand(id)) return; this.setState({brandId:id, view:'plans', menuOpen:false}); }
+  openPlan(id){ const p=this.state.plans.find(x=>x.id===id); if(!p||!this.guardBrand(p.brandId)) return; this.setState({view:'planDetail', planId:id, brandId:p.brandId}); }
   backToPlans(){ this.setState({view:'plans'}); }
   uploadPlan(){ this.flash('Plan uploaded — sent for review'); const b=this.brand(this.state.brandId); const p={id:'p'+Date.now(), brandId:this.state.brandId, month:'August 2026', status:'In Review', by:'You', at:'just now', rows:[{d:3, concept:'Untitled slot', platform:'Instagram — Post', campaign:'—', art:'Not started'}]}; this.state.plans.push(p); this.notify('You','submitted the August 2026 content calendar for review.', b.name, '⌗', null); }
   planApprove(){ const p=this.state.plans.find(x=>x.id===this.state.planId); p.status='Approved'; p.approvedBy='You · just now'; this.notify('You','approved the '+p.month+' content calendar — '+p.by+' notified.', this.brand(p.brandId).name, '✓', null); this.flash('Content plan approved'); }
@@ -1478,7 +1541,9 @@ class Component extends DCLogic {
     const me=this.currentUser();
     if(!me) return [];
     const approver=Object.values(me.roles||{}).some(r=>r==='Admin'||r==='Reviewer');
+    const allowed=new Set(this.visibleBrands().map(b=>b.name));
     return this.state.notes.filter(n=>{
+      if(me.kind==='client' && n.brand && !allowed.has(n.brand)) return false;
       if(n.forId) return n.forId===me.id;
       if(n.audience==='approver') return approver;
       return true;
@@ -1512,8 +1577,8 @@ class Component extends DCLogic {
   pickerPrev(){ this.setState(s=>({pickerMonth: s.pickerMonth>6? s.pickerMonth-1 : 6})); }
   pickerNext(){ this.setState(s=>({pickerMonth: s.pickerMonth<7? s.pickerMonth+1 : 7})); }
   pickDay(day, monthIdx){ this.setState({subDay:day, subDate:String(day), pickerOpen:false, pickerMonth:monthIdx}); }
-  goGuidelines(id){ this.setState({brandId:id, view:'guidelines', menuOpen:false}); }
-  openDesign(id){ const d=this.design(id); this.setState({view:'review', designId:id, brandId:d.brandId, panel:'comments', pinMode:false, draft:null, commentText:'', slideIndex:0, captionDraft:null, sheetOpen:false, menuOpen:false, prevView:this.state.view==='review'?this.state.prevView:this.state.view}); }
+  goGuidelines(id){ if(!this.guardBrand(id)) return; this.setState({brandId:id, view:'guidelines', menuOpen:false}); }
+  openDesign(id){ const d=this.design(id); if(!d||!this.guardBrand(d.brandId)) return; this.setState({view:'review', designId:id, brandId:d.brandId, panel:'comments', pinMode:false, draft:null, commentText:'', slideIndex:0, captionDraft:null, sheetOpen:false, menuOpen:false, prevView:this.state.view==='review'?this.state.prevView:this.state.view}); }
   back(){ this.setState(s=>({view: s.brandId?'queue':'dashboard', menuOpen:false, sheetOpen:false, pinMode:false, draft:null})); }
 
   // review interactions
@@ -1566,7 +1631,11 @@ class Component extends DCLogic {
   isCarousel(d){ return !!(d && (d.format==='carousel' || (d.slides && d.slides.length>1))); }
 
   // submit modal
-  openSubmit(){ this.setState({submitOpen:true, subBrand:this.state.brandId?this.brand(this.state.brandId).name:this.state.brands[0].name, subTitle:'', subCaption:'', subDate:'', subDay:null, pickerOpen:false, pickerMonth:6, subFormat:'single', subPlatforms:['Instagram'], subSlides:[], subCaptionLater:false, subError:''}); }
+  openSubmit(){
+    const brands=this.visibleBrands();
+    const current=brands.find(b=>b.id===this.state.brandId);
+    this.setState({submitOpen:true, subBrand:current?current.name:(brands[0]?brands[0].name:''), subTitle:'', subCaption:'', subDate:'', subDay:null, pickerOpen:false, pickerMonth:6, subFormat:'single', subPlatforms:['Instagram'], subSlides:[], subCaptionLater:false, subError:''});
+  }
   closeSubmit(){ this.setState({submitOpen:false}); }
   setFormatCarousel(){ this.setState(s=>{
     const slides = s.subSlides.length>=2 ? s.subSlides : [{id:'s1', name:'Slide 1', caption:''},{id:'s2', name:'Slide 2', caption:''}];
@@ -1603,7 +1672,9 @@ class Component extends DCLogic {
     }
     if(!platforms.length){ this.setState({subError:'Choose at least one platform.'}); return; }
     if(format==='carousel' && slides.length<2){ this.setState({subError:'A carousel needs at least two slides.'}); return; }
-    const b=this.state.brands.find(x=>x.name===this.state.subBrand)||this.state.brands[0];
+    const allowed=this.visibleBrands();
+    const b=allowed.find(x=>x.name===this.state.subBrand)||allowed[0];
+    if(!b){ this.setState({subError:'No brand is shared with you.'}); return; }
     const t=this.state.subTitle.trim()||'Untitled submission';
     const onlyLi=platforms.length===1 && platforms[0]==='LinkedIn';
     const caption=slides.map(sl=>sl.caption).filter(Boolean).join('\n\n');
@@ -1655,7 +1726,23 @@ class Component extends DCLogic {
   }
 
   // admin
-  setRole(uid, bid, role){ const u=this.state.users.find(x=>x.id===uid); u.roles[bid]=role; this.bump(); this.flash('Role updated'); }
+  setRole(uid, bid, role){ const u=this.state.users.find(x=>x.id===uid); if(!u) return; u.roles[bid]=role; this.bump(); this.flash('Role updated'); }
+  setKind(uid, kind){
+    const u=this.state.users.find(x=>x.id===uid);
+    if(!u) return;
+    u.kind = kind==='Client' ? 'client' : 'agency';
+    this.bump();
+    this.flash(u.kind==='client' ? u.name+' is a client. Share only the brands they should see.' : u.name+' is on the agency team.');
+  }
+  toggleClientBrand(uid, bid){
+    const u=this.state.users.find(x=>x.id===uid);
+    const b=this.brand(bid);
+    if(!u||!b) return;
+    const on=u.roles[bid] && u.roles[bid]!=='—';
+    u.roles[bid]= on ? '—' : 'Viewer';
+    this.bump();
+    this.flash(on ? b.name+' is hidden from '+u.name : u.name+' can see '+b.name);
+  }
   createBrand(){ const n=this.state.brands.length+1; const name='New Brand '+n; this.state.brands.push({id:'b'+Date.now(), name, tile:'N'+n, shade:'#83A2DB', onShade:'#10141A', mute:'#1F3152', guide:{logoName:'', logoUrl:'', colors:[], displayFont:'Urbanist', bodyFont:'Urbanist', dos:[], donts:[]}}); this.state.users.forEach(u=>{ u.roles[this.state.brands[this.state.brands.length-1].id]='—'; }); this.bump(); this.flash('Brand workspace created'); }
 
   fontStack(name){ const n=(name||'Urbanist').replace(/'/g,''); return "'"+n+"',system-ui,sans-serif"; }
@@ -1663,8 +1750,10 @@ class Component extends DCLogic {
   guideBrandObj(){
     const s=this.state;
     const d=s.designId?this.design(s.designId):null;
-    if((s.view==='review'||s.view==='compare') && d) return this.brand(d.brandId);
-    return (s.brandId && this.brand(s.brandId)) || s.brands[0];
+    if((s.view==='review'||s.view==='compare') && d && this.guardBrand(d.brandId)) return this.brand(d.brandId);
+    if(s.brandId && this.guardBrand(s.brandId)) return this.brand(s.brandId);
+    const visible=this.visibleBrands();
+    return visible[0] || s.brands[0];
   }
   openGuide(){
     const b=this.guideBrandObj();
@@ -1713,7 +1802,7 @@ class Component extends DCLogic {
   }
 
   // notifications
-  openNote(n){ n.unread=false; if(n.designId) this.openDesign(n.designId); else this.bump(); }
+  openNote(n){ n.unread=false; if(n.designId){ const d=this.design(n.designId); if(!d||!this.guardBrand(d.brandId)){ this.bump(); return; } this.openDesign(n.designId); } else this.bump(); }
   markAllRead(){ this.visibleNotes().forEach(n=>{ n.unread=false; }); this.bump(); }
 
   stop(e){ e.stopPropagation(); }
@@ -1731,38 +1820,48 @@ class Component extends DCLogic {
     const ageStr = (d)=>{ if(d.age===0) return 'new'; return d.age<=12 ? d.age+'h' : d.age+'d'; };
     const thumbWord = (d)=> d.headline;
 
-    const brandNav = s.brands.map(b=>{
+    const meEarly = s.users.find(u=>u.id===s.sessionId) || null;
+    const visibleBrands = s.brands.filter(b=>this.canSeeBrand(meEarly, b.id));
+    const visibleIds = new Set(visibleBrands.map(b=>b.id));
+    const canAdmin = !!(meEarly && meEarly.kind!=='client' && Object.values(meEarly.roles||{}).includes('Admin'));
+    const clientView = !!(meEarly && meEarly.kind==='client');
+    const safeBrandId = s.brandId && visibleIds.has(s.brandId) ? s.brandId : null;
+    let view = s.view;
+    if(view==='admin' && !canAdmin) view='dashboard';
+    if(['queue','approved','calendar','guidelines','review','compare','plans','planDetail','feed'].includes(view) && !safeBrandId) view='dashboard';
+
+    const brandNav = visibleBrands.map(b=>{
       const awaiting=this.countFor(b.id, this.awaitingStates());
-      const active = s.brandId===b.id;
+      const active = safeBrandId===b.id;
       return { id:b.id, name:b.name, tile:b.tile, shade:b.shade, awaiting, hasAwaiting:awaiting>0,
-        on: (active && ['queue','approved','calendar','guidelines','review','compare','plans','planDetail','feed'].includes(s.view))?'on':'',
+        on: (active && ['queue','approved','calendar','guidelines','review','compare','plans','planDetail','feed'].includes(view))?'on':'',
         active,
-        f: (active&&s.view==='feed')?'on':'',
-        p: (active&&(s.view==='plans'||s.view==='planDetail'))?'on':'',
+        f: (active&&view==='feed')?'on':'',
+        p: (active&&(view==='plans'||view==='planDetail'))?'on':'',
         planPending: s.plans.some(p=>p.brandId===b.id && p.status==='In Review'),
         goPlans:()=>this.goPlans(b.id), goFeed:()=>this.goFeed(b.id),
-        q: (active&&(s.view==='queue'||s.view==='review'||s.view==='compare'))?'on':'',
-        a: (active&&s.view==='approved')?'on':'',
-        c: (active&&s.view==='calendar')?'on':'',
-        g: (active&&s.view==='guidelines')?'on':'',
+        q: (active&&(view==='queue'||view==='review'||view==='compare'))?'on':'',
+        a: (active&&view==='approved')?'on':'',
+        c: (active&&view==='calendar')?'on':'',
+        g: (active&&view==='guidelines')?'on':'',
         select:()=>this.selectBrand(b.id), goQueue:()=>this.goQueue(b.id), goApproved:()=>this.goApproved(b.id), goCalendar:()=>this.goCalendar(b.id), goGuidelines:()=>this.goGuidelines(b.id) };
     });
 
-    const awaitingRaw = s.designs.filter(d=>this.awaitingStates().includes(d.state));
+    const awaitingRaw = s.designs.filter(d=>visibleIds.has(d.brandId) && this.awaitingStates().includes(d.state));
     const awaitingList = awaitingRaw.slice().sort((a,b)=>b.age-a.age).map(d=>{ const t=stateTag(d.state); const b=this.brand(d.brandId); return {
       id:d.id, title:d.title, platform:d.platform, brandName:b.name, submitter:d.submitter,
       stateLabel:t.label, statusClass:t.cls, ageLabel:ageStr(d), ageColor: d.age>=48?'var(--color-accent-700)':'var(--color-neutral-600)',
       platShort: this.platShort(d),
       shade:b.shade, onShade:b.onShade, thumbWord:d.headline, open:()=>this.openDesign(d.id) }; });
 
-    const brandCards = s.brands.map(b=>({ id:b.id, name:b.name, tile:b.tile, shade:b.shade,
+    const brandCards = visibleBrands.map(b=>({ id:b.id, name:b.name, tile:b.tile, shade:b.shade,
       total: s.designs.filter(d=>d.brandId===b.id && !['Rejected/Archived'].includes(d.state)).length,
       awaiting:this.countFor(b.id,this.awaitingStates()), changes:this.countFor(b.id,['Changes Requested']), approved:this.countFor(b.id,['Approved']),
       open:()=>this.selectBrand(b.id) }));
 
     // queue
     const fmap={all:null, awaiting:this.awaitingStates(), changes:['Changes Requested'], approved:['Approved']};
-    const cur = s.brandId;
+    const cur = safeBrandId;
     let queueRaw = s.designs.filter(d=>d.brandId===cur);
     if(fmap[s.filter]) queueRaw = queueRaw.filter(d=>fmap[s.filter].includes(d.state));
     const queueList = queueRaw.map(d=>{ const t=stateTag(d.state); const b=this.brand(d.brandId); return {
@@ -1775,7 +1874,8 @@ class Component extends DCLogic {
     let sd = {title:'',brandName:'',platform:'',vcount:1,statusClass:'tag-neutral',stateLabel:'',shade:'var(--color-neutral-700)',aspect:'1 / 1',kicker:'',headline:'',sub:'',cta:'',pins:[],commentList:[],versionList:[],historyList:[],caption:'',campaign:'',postLabel:'',locked:false,actionable:false,approvedBy:'',noComments:true,
       submitter:'',onShade:'#FBFBFB',mute:'#D4D7DE',tile:'',handle:'',headerSub:'',platShort:'',hasHeader:true,hasActions:true,isStory:false,isCarousel:false,needsCaption:false,captionAction:'Add captions',captionList:[],slideLabel:'',slideName:'',likes:'0',captionText:'',captionTags:'',charCount:0,tagCount:0};
     let cmp={prevN:1,curN:1,prevAt:'',curAt:'',prevHeadline:'',prevComments:[],changeNote:''};
-    const d=this.design(s.designId);
+    const d0=this.design(s.designId);
+    const d=d0 && visibleIds.has(d0.brandId) ? d0 : null;
     if(d){ const b=this.brand(d.brandId); const t=stateTag(d.state); const curV=d.versions[d.versions.length-1].n;
       const activeComments = d.comments;
       const pins = activeComments.filter(c=>!c.general).map((c,i)=>({ n:i+1, left:c.left, top:c.top, bg: c.resolved?'var(--color-neutral-500)':'var(--color-accent-800)', focus:(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); this.focusPin(); } }));
@@ -1862,7 +1962,17 @@ class Component extends DCLogic {
       approvers: s.users.filter(u=>['Admin','Reviewer'].includes(u.roles[b.id])).length,
       total: s.designs.filter(d=>d.brandId===b.id).length }));
     const brandHeads = s.brands.map(b=>b.tile);
-    const userRows = s.users.map(u=>({ name:u.name, email:u.email, cells: s.brands.map(b=>({ role:u.roles[b.id]||'—', set:(e)=>this.setRole(u.id,b.id,e.target.value) })) }));
+    const userRows = s.users.map(u=>({ name:u.name, email:u.email, kind:u.kind==='client'?'Client':'Agency', setKind:(e)=>this.setKind(u.id, e.target.value), cells: s.brands.map(b=>({ role:u.roles[b.id]||'—', set:(e)=>this.setRole(u.id,b.id,e.target.value) })) }));
+    const clientAccess = s.users.filter(u=>u.kind==='client').map(u=>{
+      const granted = s.brands.filter(b=>this.canSeeBrand(u, b.id));
+      return {
+        name:u.name, email:u.email,
+        summary: granted.length ? granted.map(b=>b.name.split(' ')[0]).join(' · ') : 'No brands',
+        hasBrands: granted.length>0,
+        brands: s.brands.map(b=>{ const on=this.canSeeBrand(u, b.id); return { name:b.name, cls:on?'pchip on':'pchip', toggle:()=>this.toggleClientBrand(u.id, b.id) }; }),
+        granted: granted.map(b=>({ name:b.name.split(' ')[0], role:u.roles[b.id], set:(e)=>this.setRole(u.id, b.id, e.target.value) }))
+      };
+    });
 
     // content plans
     const PSTAT={'Draft':{label:'Draft',cls:'tag-neutral'},'In Review':{label:'Needs your review',cls:'tag-accent'},'Approved':{label:'Approved',cls:'tag-accent'},'Changes Requested':{label:'Changes requested',cls:'tag-outline'}};
@@ -1890,7 +2000,7 @@ class Component extends DCLogic {
 
 
     // feed preview (current brand)
-    const cbObj = (cur? this.brand(cur) : null) || s.brands[0];
+    const cbObj = (cur? this.brand(cur) : null) || visibleBrands[0] || s.brands[0];
     const feedRaw = s.designs.filter(x=>x.brandId===cur && ['Approved','Scheduled/Posted'].includes(x.state))
       .slice().sort((a,b)=>(b.postD||0)-(a.postD||0));
     const feedList = feedRaw.map(x=>({ shade:this.brand(x.brandId).shade, onShade:this.brand(x.brandId).onShade, mute:this.brand(x.brandId).mute, kicker:x.kicker, headline:x.headline, day: x.postD? (x.postD+' Jul'):'TBD', open:()=>this.openDesign(x.id) }));
@@ -1904,11 +2014,11 @@ class Component extends DCLogic {
         : 'Every planned slot has artwork in flight. Grid rhythm looks consistent.');
 
     // page titles
-    const cb=s.brandId?this.brand(s.brandId):null;
-    const titles={ dashboard:{crumb:'All brands',title:'Owner dashboard'}, notifications:{crumb:'All brands',title:'Notifications'}, admin:{crumb:'Account',title:'Admin & roles'},
+    const cb=safeBrandId?this.brand(safeBrandId):null;
+    const titles={ dashboard:{crumb:clientView?'Shared with you':'All brands',title:clientView?'Your brands':'Owner dashboard'}, notifications:{crumb:clientView?'Your brands':'All brands',title:'Notifications'}, admin:{crumb:'Account',title:'Admin & roles'},
       queue:{crumb:cb?cb.name:'',title:'Review queue'}, approved:{crumb:cb?cb.name:'',title:'Approved to post'}, calendar:{crumb:cb?cb.name:'',title:'Schedule'}, guidelines:{crumb:cb?cb.name:'',title:'Brand guidelines'}, review:{crumb:cb?cb.name:'',title:(d?d.title:'Review')}, compare:{crumb:cb?cb.name:'',title:'Version comparison'}, plans:{crumb:cb?cb.name:'',title:'Content plan'}, planDetail:{crumb:cb?cb.name:'',title:'Content plan'}, feed:{crumb:cb?cb.name:'',title:'Feed preview'} };
-    const page=titles[s.view]||{crumb:'',title:''};
-    const guideBrand = cb? cb.name : (d? this.brand(d.brandId).name : s.brands[0].name);
+    const page=titles[view]||{crumb:'',title:''};
+    const guideBrand = cb? cb.name : (visibleBrands[0]?visibleBrands[0].name:'');
     const gb = this.guideBrandObj();
     const gg = gb.guide || {logoName:'', logoUrl:'', colors:[], displayFont:'Urbanist', bodyFont:'Urbanist', dos:[], donts:[]};
     const guide = {
@@ -1937,7 +2047,8 @@ class Component extends DCLogic {
     const me = s.users.find(u=>u.id===s.sessionId) || s.users[0];
     const initials = me.name.split(' ').map(p=>p[0]).slice(0,2).join('');
     const invited = s.users.map(u=>({
-      name:u.name, email:u.email, role:this.roleLine(u),
+      name:u.name, email:u.email, role: u.kind==='client' ? 'Client' : this.roleLine(u),
+      access: u.kind==='client' ? (this.sharedNames(u)||'No brands shared') : 'Agency · every brand',
       initials:u.name.split(' ').map(p=>p[0]).slice(0,2).join(''),
       pick:()=>this.pickInvite(u.email)
     }));
@@ -1948,14 +2059,18 @@ class Component extends DCLogic {
       invited, signIn:(e)=>this.signIn(e), signOut:()=>this.signOut(),
       onLoginEmail:(e)=>this.onLoginEmail(e), onLoginPassword:(e)=>this.onLoginPassword(e),
       session:{ name:me.name, role:this.roleLine(me), initials, email:me.email },
-      nav:{ dashboard:s.view==='dashboard'?'on':'', notifications:s.view==='notifications'?'on':'', admin:s.view==='admin'?'on':'',
-        isDashboard:s.view==='dashboard', isQueue:s.view==='queue', isReview:s.view==='review', isCompare:s.view==='compare',
-        isApproved:s.view==='approved', isCalendar:s.view==='calendar', isGuidelines:s.view==='guidelines', isNotifications:s.view==='notifications', isAdmin:s.view==='admin',
-        isPlans:s.view==='plans', isPlanDetail:s.view==='planDetail', isFeed:s.view==='feed' },
-      brandNav, brandCount:s.brands.length,
+      nav:{ dashboard:view==='dashboard'?'on':'', notifications:view==='notifications'?'on':'', admin:view==='admin'?'on':'',
+        isDashboard:view==='dashboard', isQueue:view==='queue', isReview:view==='review', isCompare:view==='compare',
+        isApproved:view==='approved', isCalendar:view==='calendar', isGuidelines:view==='guidelines', isNotifications:view==='notifications', isAdmin:view==='admin',
+        isPlans:view==='plans', isPlanDetail:view==='planDetail', isFeed:view==='feed' },
+      canAdmin, dashLabel: clientView?'Your brands':'Owner dashboard',
+      scopeLine: clientView?'across your brands':'across all brands',
+      scopeQueue: clientView?'oldest first · your brands':'oldest first · all brands',
+      brandEmpty: visibleBrands.length===0,
+      brandNav, brandCount:visibleBrands.length,
       unread:{any:unreadCount>0, count:unreadCount},
       page,
-      stats:{ awaiting:awaitingRaw.length, changes:s.designs.filter(d=>d.state==='Changes Requested').length, approved:s.designs.filter(d=>d.state==='Approved').length },
+      stats:{ awaiting:awaitingRaw.length, changes:s.designs.filter(d=>visibleIds.has(d.brandId)&&d.state==='Changes Requested').length, approved:s.designs.filter(d=>visibleIds.has(d.brandId)&&d.state==='Approved').length },
       awaitingList, awaitingEmpty:awaitingList.length===0,
       brandCards,
       queueList, queueEmpty:queueList.length===0, queueCountLabel: queueList.length+' design'+(queueList.length===1?'':'s'),
@@ -1968,11 +2083,11 @@ class Component extends DCLogic {
       sheetClass: (s.sheetOpen||s.draft)?'sheet-open':'',
       sheetLabel: s.draft?'Write the correction':('Comments'+(sd.commentList.length?(' · '+sd.commentList.length):'')),
       toggleSheet:()=>this.toggleSheet(),
-      shellClass:'app'+(s.menuOpen?' menu-open':'')+((s.view==='review'||s.view==='compare')?' review-mode':''),
+      shellClass:'app'+(s.menuOpen?' menu-open':'')+((view==='review'||view==='compare')?' review-mode':''),
       menuOpen:!!s.menuOpen, toggleMenu:()=>this.toggleMenu(), closeMenu:()=>this.closeMenu(),
-      tabHome:s.view==='dashboard'?'on':'', tabAlerts:s.view==='notifications'?'on':'', tabMenu:s.menuOpen?'on':'',
+      tabHome:view==='dashboard'?'on':'', tabAlerts:view==='notifications'?'on':'', tabMenu:s.menuOpen?'on':'',
       showInstall:!!s.installOffer,
-      installClass:(s.authed&&s.view!=='review'&&s.view!=='compare')?'above-tabs':'',
+      installClass:(s.authed&&view!=='review'&&view!=='compare')?'above-tabs':'',
       installBody:(s.installOffer==='ios'||s.installOffer==='ios-help')?'In Safari, tap Share, then Add to Home Screen.':(s.installOffer==='help'?'Open the browser menu and choose Install app.':'Install Proofline to sign in and tag corrections from your phone.'),
       installButton:(s.installOffer==='ios'||s.installOffer==='ios-help'||s.installOffer==='help')?'How to install':'Install',
       installApp:()=>this.installApp(), dismissInstall:()=>this.dismissInstall(),
@@ -1994,7 +2109,7 @@ class Component extends DCLogic {
       subDateColor: s.subDay? 'var(--color-text)' : 'var(--color-neutral-600)',
       openReject:()=>this.openReject(), confirmReject:()=>this.confirmReject(), rejectOpen:s.rejectOpen,
       notifList, notifEmpty:notifList.length===0, notifSummary: unreadCount+' unread · '+myNotes.length+' for you', markAllRead:()=>this.markAllRead(),
-      adminBrands, brandHeads, userRows, createBrand:()=>this.createBrand(),
+      adminBrands, brandHeads, userRows, clientAccess, noClients:clientAccess.length===0, createBrand:()=>this.createBrand(),
       // handlers
       goDashboard:()=>this.goDashboard(), goNotifications:()=>this.goNotifications(), goAdmin:()=>this.goAdmin(),
       openDesign:(id)=>this.openDesign(id), back:()=>this.back(),
@@ -2029,7 +2144,7 @@ class Component extends DCLogic {
       captionFields: (s.captionDraft?s.captionDraft.slides:[]).map(sl=>({name:sl.name, caption:sl.caption||'', onInput:(e)=>this.onCaptionDraft(sl.id, e)})),
       submitOpen:s.submitOpen, approveOpen:s.approveOpen, changesOpen:s.changesOpen, changesNote:s.changesNote,
       subBrand:s.subBrand, subTitle:s.subTitle, subPlatform:s.subPlatform, subDate:s.subDate, subCaption:s.subCaption,
-      brandOptions:s.brands.map(b=>b.name),
+      brandOptions:visibleBrands.map(b=>b.name),
       openCommentsWarn, guideBrand, guide,
       guideOpen:s.guideOpen, openGuide:()=>this.openGuide(), closeGuide:()=>this.closeGuide(), saveGuide:()=>this.saveGuide(),
       onGuideLogo:(e)=>this.onGuideLogo(e), clearGuideLogo:()=>this.clearGuideLogo(), addGuideColor:()=>this.addGuideColor(),
