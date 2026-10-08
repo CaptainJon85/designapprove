@@ -2,7 +2,14 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#10141A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Proofline">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
 <script src="./support.js"></script>
 </head>
 <body>
@@ -124,6 +131,56 @@
   .login-card{width:min(440px,100%);background:var(--paper);border-radius:32px;box-shadow:0 1px 0 #fff inset,var(--shadow-lg);padding:36px 32px 28px}
   .invite{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--surface-2);border:0;border-radius:18px;padding:10px 12px;cursor:pointer;font:inherit;color:var(--ink)}
   .invite:hover{background:#fff;box-shadow:var(--shadow-sm)}
+
+  .menu-btn,.sheet-handle,.tag-fab,.tabbar,.nav-scrim,.mobile-only{display:none}
+  .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-3);margin-bottom:var(--space-6)}
+  .sheet-grab{width:36px;height:4px;border-radius:99px;background:#C9CED6}
+
+  @media (max-width:860px){
+    .login{padding:20px 14px calc(20px + env(safe-area-inset-bottom));align-items:start}
+    .login-card{padding:28px 18px 20px;border-radius:28px}
+    .login-card h3{font-size:28px !important}
+    .app{height:100dvh !important;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+    .app.review-mode{padding-bottom:0}
+    .sidebar{position:fixed !important;z-index:40;top:0;bottom:0;left:0;width:min(320px,88vw) !important;background:#E8EAF0;transform:translateX(-105%);transition:transform .22s ease;padding-top:calc(12px + env(safe-area-inset-top)) !important;box-shadow:var(--shadow-lg)}
+    .app.menu-open .sidebar{transform:none}
+    .nav-scrim{display:block;position:fixed;inset:0;z-index:35;background:rgba(16,20,26,.28)}
+    .menu-btn{display:inline-flex !important}
+    .topbar{padding:calc(12px + env(safe-area-inset-top)) 14px 10px !important}
+    .topbar h3{font-size:26px !important}
+    .submit-label{display:none}
+    .stage{margin:0 !important;border-radius:28px 28px 0 0 !important}
+    .stats{grid-template-columns:1fr 1fr;gap:10px}
+    .dash-split{grid-template-columns:1fr !important}
+    .queue-filters{flex-wrap:wrap}
+    .queue-filters .seg{width:100%;overflow-x:auto}
+    .review{height:100%}
+    .app.review-mode .stage{overflow:hidden !important}
+    .review-bar{flex-wrap:wrap;padding:8px 12px !important;gap:8px !important}
+    .review-actions{width:100%;display:flex;gap:8px}
+    .review-actions .btn{flex:1;min-height:44px}
+    .review-body{flex-direction:column !important}
+    .review-canvas{padding:12px 12px 64px !important}
+    .review-panel{width:100% !important;flex:none !important;border-left:0 !important;border-top:1px solid var(--color-divider);background:var(--paper);border-radius:22px 22px 0 0;max-height:52px !important;overflow:hidden}
+    .review-panel.sheet-open{max-height:min(72dvh,640px) !important}
+    .sheet-handle{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;background:transparent;font:inherit;font-size:13px;font-weight:500;min-height:48px;cursor:pointer;color:var(--ink)}
+    .tag-fab{display:inline-flex;position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:4;white-space:nowrap;box-shadow:var(--shadow-md)}
+    .pin-bar{display:none !important}
+    .mobile-only{display:inline}
+    .desktop-only{display:none}
+    .pin{width:34px !important;height:34px !important;font-size:14px !important}
+    .tabbar{display:flex;position:fixed;z-index:30;left:0;right:0;bottom:0;gap:4px;padding:6px 10px calc(6px + env(safe-area-inset-bottom));background:rgba(251,251,251,.94);backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.8)}
+    .app.review-mode .tabbar{display:none}
+    .tabbar button{flex:1;border:0;background:transparent;font:inherit;font-size:11px;font-weight:500;color:var(--color-neutral-700);border-radius:16px;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+    .tabbar button.on{background:var(--ink);color:#fff}
+    .tabbar svg{width:18px;height:18px;stroke-width:1.6}
+    .pair{grid-template-columns:1fr !important}
+    .input,textarea.input{font-size:16px}
+    .dialog{border-radius:24px !important;padding:20px !important;max-height:min(92dvh,860px)}
+    .install-banner{left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom))}
+    .install-banner.above-tabs{bottom:calc(76px + env(safe-area-inset-bottom))}
+  }
+  .install-banner{position:fixed;z-index:45;left:16px;right:16px;bottom:16px;background:var(--paper);border-radius:22px;box-shadow:var(--shadow-lg);padding:14px 14px 12px;display:flex;flex-direction:column;gap:8px}
 </style>
 </helmet>
 
@@ -173,10 +230,10 @@
 </sc-if>
 
 <sc-if value="{{ signedIn }}" hint-placeholder-val="{{ false }}">
-<div style="display:flex;height:100vh;overflow:hidden;font-family:var(--font-body);color:var(--color-text);background:linear-gradient(165deg,#EDEDEF 0%,#DFE2EA 50%,#CDD5E6 100%)">
+<div class="{{ shellClass }}" style="display:flex;height:100vh;overflow:hidden;font-family:var(--font-body);color:var(--color-text);background:linear-gradient(165deg,#EDEDEF 0%,#DFE2EA 50%,#CDD5E6 100%)">
 
   <!-- ══ SIDEBAR ══ -->
-  <aside style="width:256px;flex:none;display:flex;flex-direction:column;padding:var(--space-4) var(--space-3);gap:var(--space-2);overflow-y:auto">
+  <aside class="sidebar" style="width:256px;flex:none;display:flex;flex-direction:column;padding:var(--space-4) var(--space-3);gap:var(--space-2);overflow-y:auto">
     <div style="display:flex;align-items:center;gap:9px;padding:2px 6px var(--space-3)">
       <div style="width:36px;height:36px;border-radius:12px;background:#10141A;display:grid;place-items:center;color:#fff">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:15px;height:15px"><path d="M20 6 9 17l-5-5"/></svg>
@@ -232,12 +289,16 @@
       <button class="btn btn-ghost" onClick="{{ signOut }}" style="min-height:32px;padding:4px 10px;font-size:12px">Sign out</button>
     </div>
   </aside>
+  <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+    <div class="nav-scrim" onClick="{{ closeMenu }}"></div>
+  </sc-if>
 
   <!-- ══ MAIN ══ -->
   <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
 
     <!-- topbar -->
-    <header style="flex:none;display:flex;align-items:center;gap:var(--space-3);padding:22px 24px 16px">
+    <header class="topbar" style="flex:none;display:flex;align-items:center;gap:var(--space-3);padding:22px 24px 16px">
+      <button class="iconbtn menu-btn" onClick="{{ toggleMenu }}" title="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <div style="min-width:0">
         <div style="font-size:11px;color:var(--color-neutral-600)">{{ page.crumb }}</div>
         <h3 style="margin:0;font-size:36px;font-weight:500;letter-spacing:-.02em">{{ page.title }}</h3>
@@ -248,17 +309,17 @@
         </button>
         <button class="btn btn-primary" onClick="{{ openSubmit }}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:15px;height:15px"><path d="M12 5v14M5 12h14"/></svg>
-          Submit design
+          <span class="submit-label">Submit design</span>
         </button>
       </div>
     </header>
 
-    <div style="flex:1;overflow-y:auto;margin:0 16px 16px 0;border-radius:36px;background:rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.7)">
+    <div class="stage" style="flex:1;overflow-y:auto;margin:0 16px 16px 0;border-radius:36px;background:rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.7)">
 
     <!-- ═══════════ DASHBOARD ═══════════ -->
     <sc-if value="{{ nav.isDashboard }}" hint-placeholder-val="{{ true }}">
       <div style="padding:var(--space-6);max-width:1200px">
-        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-3);margin-bottom:var(--space-6)">
+        <div class="stats">
           <div class="blueprint" style="padding:var(--space-4);display:flex;flex-direction:column;min-height:130px">
             <div style="font-size:11px;color:var(--color-neutral-600)">Awaiting you</div>
             <div style="font-family:var(--font-heading);font-size:40px;line-height:1;margin-top:auto">{{ stats.awaiting }}</div>
@@ -281,7 +342,7 @@
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:var(--space-6);align-items:start">
+        <div class="dash-split" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:var(--space-6);align-items:start">
           <section>
             <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:var(--space-3)">
               <h4 style="margin:0">Awaiting your review</h4>
@@ -331,7 +392,7 @@
     <!-- ═══════════ QUEUE ═══════════ -->
     <sc-if value="{{ nav.isQueue }}" hint-placeholder-val="{{ false }}">
       <div style="padding:var(--space-6)">
-        <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4)">
+        <div class="queue-filters" style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4)">
           <div class="seg">
             <label class="seg-opt"><input type="radio" name="qf" checked="{{ qf.all }}" onChange="{{ setFilterAll }}">All</label>
             <label class="seg-opt"><input type="radio" name="qf" checked="{{ qf.awaiting }}" onChange="{{ setFilterAwaiting }}">Awaiting</label>
@@ -368,9 +429,9 @@
 
     <!-- ═══════════ REVIEW ═══════════ -->
     <sc-if value="{{ nav.isReview }}" hint-placeholder-val="{{ false }}">
-      <div style="display:flex;flex-direction:column;height:100%">
+      <div class="review" style="display:flex;flex-direction:column;height:100%">
         <!-- review action bar -->
-        <div style="flex:none;display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-6);border-bottom:1px solid var(--color-divider)">
+        <div class="review-bar" style="flex:none;display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-6);border-bottom:1px solid var(--color-divider)">
           <button class="iconbtn" onClick="{{ back }}" title="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
           <div style="flex:1 1 0;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;min-width:0">
@@ -379,8 +440,8 @@
             </div>
             <div style="font-size:11px;color:var(--color-neutral-600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">v{{ sd.vcount }} · {{ sd.submitter }}</div>
           </div>
-          <div style="margin-left:auto;flex:none;display:flex;align-items:center;gap:var(--space-2)">
-            <button class="btn btn-secondary" onClick="{{ togglePinMode }}" style="border-color: {{ pinBorder }};color: {{ pinColor }};white-space:nowrap">
+          <div class="review-actions" style="margin-left:auto;flex:none;display:flex;align-items:center;gap:var(--space-2)">
+            <button class="btn btn-secondary pin-bar" onClick="{{ togglePinMode }}" style="border-color: {{ pinBorder }};color: {{ pinColor }};white-space:nowrap">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;stroke-width:1.5"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>
               {{ pinModeLabel }}
             </button>
@@ -394,7 +455,7 @@
             </sc-if>
             <sc-if value="{{ sd.actionable }}" hint-placeholder-val="{{ true }}">
               <button class="iconbtn" onClick="{{ openReject }}" title="Reject &amp; archive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-              <button class="btn btn-secondary" onClick="{{ openChanges }}" style="white-space:nowrap">Request changes</button>
+              <button class="btn btn-secondary" onClick="{{ openChanges }}" style="white-space:nowrap"><span class="desktop-only">Request changes</span><span class="mobile-only">Changes</span></button>
               <button class="btn btn-primary" onClick="{{ openApprove }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px"><path d="M20 6 9 17l-5-5"/></svg>Approve
               </button>
@@ -402,12 +463,13 @@
           </div>
         </div>
 
-        <div style="flex:1;display:flex;min-height:0;position:relative">
+        <div class="review-body" style="flex:1;display:flex;min-height:0;position:relative">
           <!-- canvas -->
-          <div style="position:relative;flex:1;min-width:0;background:var(--well);overflow:auto;display:grid;place-items:center;padding:var(--space-6) var(--space-4) var(--space-8)">
+          <div class="review-canvas" style="position:relative;flex:1;min-width:0;background:var(--well);overflow:auto;display:grid;place-items:center;padding:var(--space-6) var(--space-4) var(--space-8)">
             <sc-if value="{{ pinHint }}" hint-placeholder-val="{{ false }}">
-              <div style="position:absolute;bottom:var(--space-3);left:50%;transform:translateX(-50%);z-index:3;background:var(--color-accent-900);color:var(--on-shade);font-size:12px;padding:5px 12px">Click anywhere on the artwork to drop a pin</div>
+              <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:3;background:var(--ink);color:#fff;font-size:13px;line-height:1.3;padding:8px 14px;border-radius:18px;text-align:center;width:max-content;max-width:92%">Tap the post where a change is needed</div>
             </sc-if>
+            <sc-if value="{{ sd.actionable }}" hint-placeholder-val="{{ false }}"><button type="button" class="btn btn-primary tag-fab" onClick="{{ togglePinMode }}">{{ pinModeLabel }}</button></sc-if>
             <div style="width:min(460px,100%);position:relative">
               <div class="blueprint" style="padding:0;background:var(--surface-1)">
                 
@@ -499,7 +561,8 @@
           </div>
 
           <!-- side panel -->
-          <div style="width:clamp(272px,34%,360px);flex:none;border-left:1px solid var(--color-divider);display:flex;flex-direction:column;min-height:0">
+          <div class="review-panel {{ sheetClass }}" style="width:clamp(272px,34%,360px);flex:none;border-left:1px solid var(--color-divider);display:flex;flex-direction:column;min-height:0">
+            <button type="button" class="sheet-handle" onClick="{{ toggleSheet }}"><span class="sheet-grab"></span>{{ sheetLabel }}</button>
             <div style="flex:none;padding:var(--space-3) var(--space-4) 0">
               <div class="seg" style="width:100%">
                 <label class="seg-opt" style="flex:1 1 0;min-width:0;justify-content:center;font-size:12px;white-space:nowrap"><input type="radio" name="panel" checked="{{ panel.comments }}" onChange="{{ setPanelComments }}">Comments</label>
@@ -515,7 +578,7 @@
                 <sc-if value="{{ hasDraftPin }}" hint-placeholder-val="{{ false }}">
                   <div class="blueprint" style="padding:var(--space-3);margin-bottom:var(--space-3);background:var(--color-accent-100)">
                     <div style="font-size:12px;font-weight:500;margin-bottom:6px">New pinned comment</div>
-                    <textarea class="input" placeholder="Describe the change needed here…" value="{{ commentText }}" onInput="{{ onCommentInput }}"></textarea>
+                    <textarea class="input" placeholder="What should change here?" value="{{ commentText }}" onInput="{{ onCommentInput }}" style="min-height:88px"></textarea>
                     <div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-primary" onClick="{{ savePin }}">Add comment</button><button class="btn btn-ghost" onClick="{{ cancelPin }}">Cancel</button></div>
                   </div>
                 </sc-if>
@@ -532,7 +595,7 @@
                       <sc-if value="{{ c.canResolve }}" hint-placeholder-val="{{ true }}"><button class="btn btn-ghost" style="margin-top:6px;font-size:12px" onClick="{{ c.toggle }}">{{ c.resolveLabel }}</button></sc-if>
                     </div>
                   </sc-for>
-                  <sc-if value="{{ sd.noComments }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:var(--color-neutral-600);text-align:center;padding:var(--space-4)">No comments yet. Turn on the pin tool and click the artwork, or add a general note below.</div></sc-if>
+                  <sc-if value="{{ sd.noComments }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:var(--color-neutral-600);text-align:center;padding:var(--space-4)">No corrections yet. Tap “Tag a correction”, then tap the post where the change belongs.</div></sc-if>
                 </div>
                 <div style="margin-top:var(--space-4);border-top:1px solid var(--color-divider);padding-top:var(--space-3)">
                   <textarea class="input" placeholder="Add a general comment…" value="{{ generalText }}" onInput="{{ onGeneralInput }}"></textarea>
@@ -1161,6 +1224,12 @@
     </div>
   </sc-if>
 
+  <nav class="tabbar">
+    <button type="button" class="{{ tabHome }}" onClick="{{ goDashboard }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1Z"/></svg>Home</button>
+    <button type="button" class="{{ tabAlerts }}" onClick="{{ goNotifications }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Alerts</button>
+    <button type="button" class="{{ tabMenu }}" onClick="{{ toggleMenu }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Menu</button>
+  </nav>
+
   <!-- ══ TOAST ══ -->
   <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--color-neutral-900);border-radius:999px;color:var(--on-shade);padding:10px 18px;font-size:13px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:8px;z-index:50">
@@ -1170,7 +1239,24 @@
 
 </div>
 </sc-if>
+<sc-if value="{{ showInstall }}" hint-placeholder-val="{{ false }}">
+  <div class="install-banner {{ installClass }}">
+    <div style="font-size:14px;font-weight:500">Review on your phone</div>
+    <div style="font-size:13px;color:var(--color-neutral-700)">{{ installBody }}</div>
+    <div style="display:flex;gap:8px">
+      <button type="button" class="btn btn-primary" onClick="{{ installApp }}">{{ installButton }}</button>
+      <button type="button" class="btn btn-ghost" onClick="{{ dismissInstall }}">Not now</button>
+    </div>
+  </div>
+</sc-if>
 </x-dc>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(function(){});
+}
+window.__pwaPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); window.__pwaPrompt = e; });
+</script>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
   constructor(props){
@@ -1303,6 +1389,7 @@ class Component extends DCLogic {
       subFormat:'single', subPlatforms:['Instagram'], subSlides:[], subCaptionLater:false, subError:'',
       slideIndex:0, captionDraft:null,
       guideOpen:false, guideDraft:null, guideError:'',
+      menuOpen:false, sheetOpen:false, installOffer:(function(){ try { const mobile=window.matchMedia('(max-width:860px)').matches; const standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone; if(mobile&&!standalone&&!localStorage.getItem('pwa-dismiss')) return /iphone|ipad|ipod/i.test(navigator.userAgent)?'ios':'android'; } catch(err) {} return ''; })(),
       brands, designs, users, notes, tick:0,
       authed:false, sessionId:null, loginEmail:'', loginPassword:'', loginError:'',
     };
@@ -1346,17 +1433,27 @@ class Component extends DCLogic {
     if(password!=='proofline'){ this.setState({loginError:'Password doesn’t match. Invited users sign in with proofline.'}); return; }
     this.setState({authed:true, sessionId:user.id, loginError:'', loginPassword:'', view:'dashboard'});
   }
-  signOut(){ this.setState({authed:false, sessionId:null, loginPassword:'', loginError:'', view:'dashboard'}); }
+  signOut(){ this.setState({authed:false, sessionId:null, loginPassword:'', loginError:'', view:'dashboard', menuOpen:false}); }
 
-  goDashboard(){ this.setState({view:'dashboard'}); }
-  goNotifications(){ this.setState({view:'notifications'}); }
-  goAdmin(){ this.setState({view:'admin'}); }
-  selectBrand(id){ this.setState({brandId:id, view:'queue', filter:'all'}); }
-  goQueue(id){ this.setState({brandId:id, view:'queue'}); }
-  goApproved(id){ this.setState({brandId:id, view:'approved'}); }
-  goCalendar(id){ this.setState({brandId:id, view:'calendar'}); }
-  goFeed(id){ this.setState({brandId:id, view:'feed'}); }
-  goPlans(id){ this.setState({brandId:id, view:'plans'}); }
+  toggleMenu(){ this.setState(s=>({menuOpen:!s.menuOpen})); }
+  closeMenu(){ this.setState({menuOpen:false}); }
+  toggleSheet(){ this.setState(s=>({sheetOpen:!s.sheetOpen})); }
+  installApp(){
+    const prompt=window.__pwaPrompt;
+    if(prompt){ prompt.prompt(); this.setState({installOffer:''}); try{ localStorage.setItem('pwa-dismiss','1'); }catch(err){} return; }
+    this.setState(s=>({installOffer: s.installOffer==='ios'||s.installOffer==='ios-help' ? 'ios-help' : 'help'}));
+  }
+  dismissInstall(){ try{ localStorage.setItem('pwa-dismiss','1'); }catch(err){} this.setState({installOffer:''}); }
+
+  goDashboard(){ this.setState({view:'dashboard', menuOpen:false}); }
+  goNotifications(){ this.setState({view:'notifications', menuOpen:false}); }
+  goAdmin(){ this.setState({view:'admin', menuOpen:false}); }
+  selectBrand(id){ this.setState({brandId:id, view:'queue', filter:'all', menuOpen:false}); }
+  goQueue(id){ this.setState({brandId:id, view:'queue', menuOpen:false}); }
+  goApproved(id){ this.setState({brandId:id, view:'approved', menuOpen:false}); }
+  goCalendar(id){ this.setState({brandId:id, view:'calendar', menuOpen:false}); }
+  goFeed(id){ this.setState({brandId:id, view:'feed', menuOpen:false}); }
+  goPlans(id){ this.setState({brandId:id, view:'plans', menuOpen:false}); }
   openPlan(id){ const p=this.state.plans.find(x=>x.id===id); this.setState({view:'planDetail', planId:id, brandId:p.brandId}); }
   backToPlans(){ this.setState({view:'plans'}); }
   uploadPlan(){ this.flash('Plan uploaded — sent for review'); const b=this.brand(this.state.brandId); const p={id:'p'+Date.now(), brandId:this.state.brandId, month:'August 2026', status:'In Review', by:'You', at:'just now', rows:[{d:3, concept:'Untitled slot', platform:'Instagram — Post', campaign:'—', art:'Not started'}]}; this.state.plans.push(p); this.notify('You','submitted the August 2026 content calendar for review.', b.name, '⌗', null); }
@@ -1370,20 +1467,20 @@ class Component extends DCLogic {
   pickerPrev(){ this.setState(s=>({pickerMonth: s.pickerMonth>6? s.pickerMonth-1 : 6})); }
   pickerNext(){ this.setState(s=>({pickerMonth: s.pickerMonth<7? s.pickerMonth+1 : 7})); }
   pickDay(day, monthIdx){ this.setState({subDay:day, subDate:String(day), pickerOpen:false, pickerMonth:monthIdx}); }
-  goGuidelines(id){ this.setState({brandId:id, view:'guidelines'}); }
-  openDesign(id){ const d=this.design(id); this.setState({view:'review', designId:id, brandId:d.brandId, panel:'comments', pinMode:false, draft:null, commentText:'', slideIndex:0, captionDraft:null, prevView:this.state.view==='review'?this.state.prevView:this.state.view}); }
-  back(){ this.setState(s=>({view: s.brandId?'queue':'dashboard'})); }
+  goGuidelines(id){ this.setState({brandId:id, view:'guidelines', menuOpen:false}); }
+  openDesign(id){ const d=this.design(id); this.setState({view:'review', designId:id, brandId:d.brandId, panel:'comments', pinMode:false, draft:null, commentText:'', slideIndex:0, captionDraft:null, sheetOpen:false, menuOpen:false, prevView:this.state.view==='review'?this.state.prevView:this.state.view}); }
+  back(){ this.setState(s=>({view: s.brandId?'queue':'dashboard', menuOpen:false, sheetOpen:false, pinMode:false, draft:null})); }
 
   // review interactions
   togglePinMode(){ this.setState(s=>({pinMode:!s.pinMode, draft: s.pinMode?null:s.draft})); }
-  artClick(e){ if(!this.state.pinMode) return; const r=e.currentTarget.getBoundingClientRect(); const left=((e.clientX-r.left)/r.width*100).toFixed(1)+'%'; const top=((e.clientY-r.top)/r.height*100).toFixed(1)+'%'; this.setState({draft:{left,top}, panel:'comments', commentText:''}); }
+  artClick(e){ if(!this.state.pinMode) return; if(e.target&&e.target.closest&&e.target.closest('.pin')) return; const point=(e.changedTouches&&e.changedTouches[0])||e; const r=e.currentTarget.getBoundingClientRect(); const left=((point.clientX-r.left)/r.width*100).toFixed(1)+'%'; const top=((point.clientY-r.top)/r.height*100).toFixed(1)+'%'; this.setState({draft:{left,top}, panel:'comments', commentText:'', sheetOpen:true}); }
   onCommentInput(e){ this.setState({commentText:e.target.value}); }
-  savePin(){ const d=this.design(this.state.designId); if(!this.state.draft||!this.state.commentText.trim()) return; const v=d.versions[d.versions.length-1].n; d.comments.push({id:'c'+Date.now(), left:this.state.draft.left, top:this.state.draft.top, text:this.state.commentText.trim(), author:'You', at:'just now', resolved:false, version:v}); d.history.push({type:'comment', actor:'You', text:'pinned a comment', at:'just now', dot:'var(--color-accent-2)'}); this.setState({draft:null, commentText:'', pinMode:false}); this.flash('Comment pinned'); }
+  savePin(){ const d=this.design(this.state.designId); if(!this.state.draft||!this.state.commentText.trim()) return; const v=d.versions[d.versions.length-1].n; d.comments.push({id:'c'+Date.now(), left:this.state.draft.left, top:this.state.draft.top, text:this.state.commentText.trim(), author:'You', at:'just now', resolved:false, version:v}); d.history.push({type:'comment', actor:'You', text:'pinned a comment', at:'just now', dot:'var(--color-accent-2)'}); this.setState({draft:null, commentText:'', pinMode:false, sheetOpen:true}); this.flash('Comment pinned'); }
   cancelPin(){ this.setState({draft:null, commentText:''}); }
   onGeneralInput(e){ this.setState({generalText:e.target.value}); }
   addGeneral(){ const d=this.design(this.state.designId); if(!this.state.generalText.trim()) return; const v=d.versions[d.versions.length-1].n; d.comments.push({id:'g'+Date.now(), text:this.state.generalText.trim(), author:'You', at:'just now', resolved:false, version:v, general:true}); this.setState({generalText:''}); this.flash('Comment added'); }
   toggleComment(cid){ const d=this.design(this.state.designId); const c=d.comments.find(x=>x.id===cid); c.resolved=!c.resolved; this.bump(); }
-  focusPin(){ this.setState({panel:'comments'}); }
+  focusPin(){ this.setState({panel:'comments', sheetOpen:true}); }
 
   setPanel(p){ this.setState({panel:p}); }
   setFilter(f){ this.setState({filter:f}); }
@@ -1636,7 +1733,7 @@ class Component extends DCLogic {
     const d=this.design(s.designId);
     if(d){ const b=this.brand(d.brandId); const t=stateTag(d.state); const curV=d.versions[d.versions.length-1].n;
       const activeComments = d.comments;
-      const pins = activeComments.filter(c=>!c.general).map((c,i)=>({ n:i+1, left:c.left, top:c.top, bg: c.resolved?'var(--color-neutral-500)':'var(--color-accent-800)', focus:()=>this.focusPin() }));
+      const pins = activeComments.filter(c=>!c.general).map((c,i)=>({ n:i+1, left:c.left, top:c.top, bg: c.resolved?'var(--color-neutral-500)':'var(--color-accent-800)', focus:(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); this.focusPin(); } }));
       let pinIdx=0;
       const commentList = activeComments.map(c=>{ const pinned=!c.general; const n= pinned?(++pinIdx):null; return {
         pinned, n, bg: c.resolved?'var(--color-neutral-500)':'var(--color-accent-800)', author:c.author, at:c.at, text:c.text,
@@ -1820,7 +1917,18 @@ class Component extends DCLogic {
       sd, cmp,
       panel:{ comments:s.panel==='comments', versions:s.panel==='versions', details:s.panel==='details', guide:s.panel==='guide' },
       setPanelComments:()=>this.setPanel('comments'), setPanelVersions:()=>this.setPanel('versions'), setPanelDetails:()=>this.setPanel('details'), setPanelGuide:()=>this.setPanel('guide'),
-      pinModeLabel: s.pinMode?'Cancel pin':'Add pin comment', artCursor: s.pinMode?'crosshair':'default',
+      pinModeLabel: s.pinMode?'Cancel tag':'Tag a correction', artCursor: s.pinMode?'crosshair':'default',
+      sheetClass: (s.sheetOpen||s.draft)?'sheet-open':'',
+      sheetLabel: s.draft?'Write the correction':('Comments'+(sd.commentList.length?(' · '+sd.commentList.length):'')),
+      toggleSheet:()=>this.toggleSheet(),
+      shellClass:'app'+(s.menuOpen?' menu-open':'')+((s.view==='review'||s.view==='compare')?' review-mode':''),
+      menuOpen:!!s.menuOpen, toggleMenu:()=>this.toggleMenu(), closeMenu:()=>this.closeMenu(),
+      tabHome:s.view==='dashboard'?'on':'', tabAlerts:s.view==='notifications'?'on':'', tabMenu:s.menuOpen?'on':'',
+      showInstall:!!s.installOffer,
+      installClass:(s.authed&&s.view!=='review'&&s.view!=='compare')?'above-tabs':'',
+      installBody:(s.installOffer==='ios'||s.installOffer==='ios-help')?'In Safari, tap Share, then Add to Home Screen.':(s.installOffer==='help'?'Open the browser menu and choose Install app.':'Install Proofline to sign in and tag corrections from your phone.'),
+      installButton:(s.installOffer==='ios'||s.installOffer==='ios-help'||s.installOffer==='help')?'How to install':'Install',
+      installApp:()=>this.installApp(), dismissInstall:()=>this.dismissInstall(),
       pinHint: s.pinMode && !s.draft,
       pinBorder: s.pinMode?'var(--color-accent)':'var(--color-divider)',
       pinColor: s.pinMode?'var(--color-accent-800)':'var(--color-neutral-800)',
