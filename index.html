@@ -116,9 +116,60 @@
 
   @keyframes pindrop{from{opacity:0;transform:translate(-50%,-50%) scale(.6)}to{opacity:1}}
   .pin{animation:pindrop .22s ease-out;border-radius:50%;box-shadow:0 4px 10px rgba(0,0,0,.18)}
+
+  .login{min-height:100vh;display:grid;place-items:center;padding:32px 20px;background:linear-gradient(165deg,#EDEDEF 0%,#DFE2EA 50%,#CDD5E6 100%)}
+  .login-card{width:min(440px,100%);background:var(--paper);border-radius:32px;box-shadow:0 1px 0 #fff inset,var(--shadow-lg);padding:36px 32px 28px}
+  .invite{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--surface-2);border:0;border-radius:18px;padding:10px 12px;cursor:pointer;font:inherit;color:var(--ink)}
+  .invite:hover{background:#fff;box-shadow:var(--shadow-sm)}
 </style>
 </helmet>
 
+<sc-if value="{{ signedOut }}" hint-placeholder-val="{{ true }}">
+  <div class="login">
+    <form class="login-card" onSubmit="{{ signIn }}">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+        <div style="width:44px;height:44px;border-radius:14px;background:#10141A;display:grid;place-items:center;color:#fff;flex:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <div>
+          <div style="font-family:var(--font-heading);font-weight:500;font-size:22px;letter-spacing:-.02em;line-height:1">Proofline</div>
+          <div style="font-size:12px;color:var(--color-neutral-600);margin-top:3px">Review &amp; approval</div>
+        </div>
+      </div>
+      <h3 style="font-size:32px;letter-spacing:-.03em;margin:0 0 8px">Sign in</h3>
+      <p style="margin:0 0 22px;font-size:14px;color:var(--color-neutral-600);line-height:1.45">Use the email you were invited with. Your role is already set for each brand.</p>
+      <div class="field" style="margin-bottom:12px">
+        <label for="login-email">Email</label>
+        <input id="login-email" class="input" type="email" autocomplete="username" placeholder="you@studio.co" value="{{ loginEmail }}" onInput="{{ onLoginEmail }}">
+      </div>
+      <div class="field" style="margin-bottom:8px">
+        <label for="login-password">Password</label>
+        <input id="login-password" class="input" type="password" autocomplete="current-password" placeholder="Workspace password" value="{{ loginPassword }}" onInput="{{ onLoginPassword }}">
+      </div>
+      <sc-if value="{{ hasLoginError }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:8px 0 0;padding:10px 12px;border-radius:14px;background:#FFF0EF;color:#4E1414;font-size:13px">{{ loginError }}</div>
+      </sc-if>
+      <button class="btn btn-primary" type="submit" style="width:100%;margin-top:18px">Continue</button>
+      <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--color-divider)">
+        <div style="font-size:12px;color:var(--color-neutral-600);margin-bottom:10px">Invited to this workspace · password <span style="color:var(--ink);font-weight:500">proofline</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ invited }}" as="p" hint-placeholder-count="3">
+            <button type="button" class="invite" onClick="{{ p.pick }}">
+              <span style="width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--sky);font-size:12px;font-weight:600">{{ p.initials }}</span>
+              <span style="min-width:0">
+                <span style="display:block;font-size:14px;font-weight:500">{{ p.name }}</span>
+                <span style="display:block;font-size:12px;color:var(--color-neutral-600)">{{ p.email }}</span>
+              </span>
+              <span class="tag tag-neutral" style="margin-left:auto">{{ p.role }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </form>
+  </div>
+</sc-if>
+
+<sc-if value="{{ signedIn }}" hint-placeholder-val="{{ false }}">
 <div style="display:flex;height:100vh;overflow:hidden;font-family:var(--font-body);color:var(--color-text);background:linear-gradient(165deg,#EDEDEF 0%,#DFE2EA 50%,#CDD5E6 100%)">
 
   <!-- ══ SIDEBAR ══ -->
@@ -169,12 +220,13 @@
       </sc-if>
     </sc-for>
 
-    <div style="margin-top:auto;display:flex;align-items:center;gap:9px;padding:10px;border-radius:999px;background:rgba(255,255,255,.55)">
-      <span style="width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;font-family:var(--font-heading);font-size:12px;color:#10141A;background:var(--color-accent-300)">JF</span>
-      <div style="line-height:1.15;min-width:0">
-        <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Jon Falade</div>
-        <div style="font-size:11px;color:var(--color-neutral-600)">Owner · Approver</div>
+    <div style="margin-top:auto;display:flex;align-items:center;gap:9px;padding:8px 8px 8px 10px;border-radius:999px;background:rgba(255,255,255,.55)">
+      <span style="width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;font-family:var(--font-heading);font-size:12px;color:#10141A;background:var(--color-accent-300)">{{ session.initials }}</span>
+      <div style="line-height:1.15;min-width:0;flex:1">
+        <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ session.name }}</div>
+        <div style="font-size:11px;color:var(--color-neutral-600)">{{ session.role }}</div>
       </div>
+      <button class="btn btn-ghost" onClick="{{ signOut }}" style="min-height:32px;padding:4px 10px;font-size:12px">Sign out</button>
     </div>
   </aside>
 
@@ -952,6 +1004,7 @@
   </sc-if>
 
 </div>
+</sc-if>
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
@@ -1066,6 +1119,7 @@ class Component extends DCLogic {
       draft:null, commentText:'', generalText:'', changesNote:'', toast:null,
       subBrand:'Northwind Coffee', subTitle:'', subPlatform:'Instagram — Post', subDate:'', subCaption:'',
       brands, designs, users, notes, tick:0,
+      authed:false, sessionId:null, loginEmail:'', loginPassword:'', loginError:'',
     };
     this.STATE_META = {
       'Draft':{label:'Draft', cls:'tag-neutral'},
@@ -1087,6 +1141,28 @@ class Component extends DCLogic {
   awaitingStates(){ return ['Submitted','In Review','Resubmitted']; }
 
   // navigation
+  roleLine(user){
+    const roles = Object.values(user.roles||{});
+    if(roles.includes('Admin')) return 'Admin';
+    if(roles.includes('Reviewer')) return 'Reviewer';
+    if(roles.includes('Designer')) return 'Designer';
+    if(roles.includes('Viewer')) return 'Viewer';
+    return 'No brand access';
+  }
+  onLoginEmail(e){ this.setState({loginEmail:e.target.value, loginError:''}); }
+  onLoginPassword(e){ this.setState({loginPassword:e.target.value, loginError:''}); }
+  pickInvite(email){ this.setState({loginEmail:email, loginError:''}); }
+  signIn(e){
+    if(e && e.preventDefault) e.preventDefault();
+    const email = (this.state.loginEmail||'').trim().toLowerCase();
+    const password = this.state.loginPassword||'';
+    const user = this.state.users.find(u=>u.email.toLowerCase()===email);
+    if(!user){ this.setState({loginError:"That email hasn't been invited to this workspace."}); return; }
+    if(password!=='proofline'){ this.setState({loginError:'Password doesn’t match. Invited users sign in with proofline.'}); return; }
+    this.setState({authed:true, sessionId:user.id, loginError:'', loginPassword:'', view:'dashboard'});
+  }
+  signOut(){ this.setState({authed:false, sessionId:null, loginPassword:'', loginError:'', view:'dashboard'}); }
+
   goDashboard(){ this.setState({view:'dashboard'}); }
   goNotifications(){ this.setState({view:'notifications'}); }
   goAdmin(){ this.setState({view:'admin'}); }
@@ -1342,7 +1418,20 @@ class Component extends DCLogic {
     const openCommentsWarn = (()=>{ if(!d) return ''; const n=d.comments.filter(c=>!c.resolved).length; if(!n) return '';
       return n===1 ? 'Heads up: 1 comment is still open on this design.' : 'Heads up: '+n+' comments are still open on this design.'; })();
 
+    const me = s.users.find(u=>u.id===s.sessionId) || s.users[0];
+    const initials = me.name.split(' ').map(p=>p[0]).slice(0,2).join('');
+    const invited = s.users.map(u=>({
+      name:u.name, email:u.email, role:this.roleLine(u),
+      initials:u.name.split(' ').map(p=>p[0]).slice(0,2).join(''),
+      pick:()=>this.pickInvite(u.email)
+    }));
+
     return {
+      signedIn:!!s.authed, signedOut:!s.authed,
+      loginEmail:s.loginEmail, loginPassword:s.loginPassword, loginError:s.loginError, hasLoginError:!!s.loginError,
+      invited, signIn:(e)=>this.signIn(e), signOut:()=>this.signOut(),
+      onLoginEmail:(e)=>this.onLoginEmail(e), onLoginPassword:(e)=>this.onLoginPassword(e),
+      session:{ name:me.name, role:this.roleLine(me), initials, email:me.email },
       nav:{ dashboard:s.view==='dashboard'?'on':'', notifications:s.view==='notifications'?'on':'', admin:s.view==='admin'?'on':'',
         isDashboard:s.view==='dashboard', isQueue:s.view==='queue', isReview:s.view==='review', isCompare:s.view==='compare',
         isApproved:s.view==='approved', isCalendar:s.view==='calendar', isGuidelines:s.view==='guidelines', isNotifications:s.view==='notifications', isAdmin:s.view==='admin',
