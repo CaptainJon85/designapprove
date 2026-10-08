@@ -17,7 +17,7 @@
 </template>
 <helmet>
 <link rel="stylesheet" href="_ds/industry-6f9f0e70-101c-4f8e-b9fe-d7259d190928/styles.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&family=Fraunces:opsz,wght@9..144,560&family=Outfit:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500&family=DM+Sans:wght@400;500;600&family=Libre+Baskerville:wght@400;700&display=swap">
 <script src="_ds/industry-6f9f0e70-101c-4f8e-b9fe-d7259d190928/_ds_bundle.js"></script>
 <style>
   :root{
@@ -619,34 +619,26 @@
               <!-- brand tab -->
               <sc-if value="{{ panel.guide }}" hint-placeholder-val="{{ false }}">
                 <div>
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:var(--space-4)">
-    <span style="width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;font-family:var(--font-heading);font-size:12px;color:var(--on-shade);background:var(--color-accent-800)">B</span>
-    <div><div style="font-family:var(--font-heading);font-weight:600;font-size:17px">{{ guideBrand }}</div><div style="font-size:11px;color:var(--color-neutral-600)">Brand guidelines · v3</div></div>
-  </div>
-  <div style="font-size:11px;color:var(--color-neutral-600);margin-bottom:8px">Palette</div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--space-4)">
-    <div style="text-align:center"><div style="width:46px;height:46px;background:#83A2DB;border-radius:50%"></div><div style="font-size:11px;color:var(--color-neutral-600);margin-top:3px">Blue</div></div>
-    <div style="text-align:center"><div style="width:46px;height:46px;background:#29292C;border-radius:50%"></div><div style="font-size:11px;color:var(--color-neutral-600);margin-top:3px">Ink</div></div>
-    <div style="text-align:center"><div style="width:46px;height:46px;background:var(--on-shade);border:1px solid var(--color-divider)"></div><div style="font-size:11px;color:var(--color-neutral-600);margin-top:3px">Paper</div></div>
-    <div style="text-align:center"><div style="width:46px;height:46px;background:#FD8E8C;border-radius:50%"></div><div style="font-size:11px;color:var(--color-neutral-600);margin-top:3px">Coral</div></div>
-  </div>
-  <div style="font-size:11px;color:var(--color-neutral-600);margin-bottom:8px">Typography</div>
-  <div class="blueprint" style="padding:var(--space-3);margin-bottom:var(--space-4)">
-    <div style="font-family:'Barlow Condensed',system-ui,sans-serif;font-weight:600;font-size:30px;line-height:1">Barlow Condensed</div>
-    <div style="font-size:11px;color:var(--color-neutral-600)">Headlines · CTAs · display</div>
-    <div style="font-family:'Barlow',system-ui,sans-serif;font-size:15px;margin-top:8px">Barlow — body copy and captions.</div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">
-    <div class="blueprint" style="padding:var(--space-3)">
-      <div style="font-size:12px;font-weight:600;color:var(--color-accent-700);margin-bottom:6px">Do</div>
-      <ul style="margin:0;padding-left:16px;font-size:12px;line-height:1.6;color:var(--color-neutral-800)"><li>Keep logo clear-space ≥ logo height</li><li>Use the steel accent for emphasis</li><li>Left-align headlines on a grid</li></ul>
-    </div>
-    <div class="blueprint" style="padding:var(--space-3)">
-      <div style="font-size:12px;font-weight:600;color:var(--color-neutral-700);margin-bottom:6px">Don't</div>
-      <ul style="margin:0;padding-left:16px;font-size:12px;line-height:1.6;color:var(--color-neutral-800)"><li>Introduce off-brand colours</li><li>Stretch or recolour the logo</li><li>Set body copy in the display face</li></ul>
-    </div>
-  </div>
-</div>
+                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:var(--space-4)">
+                    <sc-if value="{{ guide.hasLogo }}" hint-placeholder-val="{{ false }}"><img src="{{ guide.logoUrl }}" alt="" style="width:36px;height:36px;object-fit:contain;border-radius:10px;background:var(--surface-2)"></sc-if>
+                    <sc-if value="{{ guide.noLogo }}" hint-placeholder-val="{{ true }}"><span style="width:36px;height:36px;flex:none;border-radius:10px;display:grid;place-items:center;font-family:var(--font-heading);font-size:12px;color:{{ guide.onShade }};background:{{ guide.shade }}">{{ guide.tile }}</span></sc-if>
+                    <div style="min-width:0"><div style="font-family:var(--font-heading);font-weight:600;font-size:17px">{{ guide.name }}</div><div style="font-size:11px;color:var(--color-neutral-600)">{{ guide.meta }}</div></div>
+                  </div>
+                  <div style="font-size:11px;color:var(--color-neutral-600);margin-bottom:8px">Palette</div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--space-4)">
+                    <sc-for list="{{ guide.colors }}" as="c" hint-placeholder-count="4">
+                      <div style="text-align:center"><div style="width:46px;height:46px;background:{{ c.hex }};border-radius:50%;border:1px solid var(--color-divider)"></div><div style="font-size:11px;color:var(--color-neutral-600);margin-top:3px">{{ c.name }}</div></div>
+                    </sc-for>
+                  </div>
+                  <sc-if value="{{ guide.emptyColors }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:var(--color-neutral-600);margin-bottom:var(--space-4)">No colours yet.</div></sc-if>
+                  <div style="font-size:11px;color:var(--color-neutral-600);margin-bottom:8px">Typography</div>
+                  <div class="blueprint" style="padding:var(--space-3);margin-bottom:var(--space-3)">
+                    <div style="font-family:{{ guide.displayStack }};font-weight:600;font-size:26px;line-height:1">{{ guide.displayFont }}</div>
+                    <div style="font-size:11px;color:var(--color-neutral-600)">Headlines and calls to action</div>
+                    <div style="font-family:{{ guide.bodyStack }};font-size:14px;margin-top:8px">{{ guide.bodySample }}</div>
+                  </div>
+                  <button type="button" class="btn btn-secondary btn-block" onClick="{{ openGuide }}">Edit guidelines</button>
+                </div>
               </sc-if>
 
             </div>
@@ -750,35 +742,62 @@
 
     <!-- ═══════════ GUIDELINES ═══════════ -->
     <sc-if value="{{ nav.isGuidelines }}" hint-placeholder-val="{{ false }}">
-      <div style="padding:var(--space-6);max-width:900px"><div>
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:var(--space-4)">
-    <span style="width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;font-family:var(--font-heading);font-size:12px;color:var(--on-shade);background:var(--color-accent-800)">B</span>
-    <div><div style="font-family:var(--font-heading);font-weight:600;font-size:17px">{{ guideBrand }}</div><div style="font-size:11px;color:var(--color-neutral-600)">Brand guidelines · v3</div></div>
-  </div>
-  <div style="font-size:11px;color:var(--color-neutral-600);margin-bottom:8px">Palette</div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--space-4)">
-    <div style="text-align:center"><div style="width:46px;height:46px;background:#83A2DB;border-radius:50%"></div><div style="font-size:11px;color:var(--color-neutral-600);margin-top:3px">Blue</div></div>
-    <div style="text-align:center"><div style="width:46px;height:46px;background:#29292C;border-radius:50%"></div><div style="font-size:11px;color:var(--color-neutral-600);margin-top:3px">Ink</div></div>
-    <div style="text-align:center"><div style="width:46px;height:46px;background:var(--on-shade);border:1px solid var(--color-divider)"></div><div style="font-size:11px;color:var(--color-neutral-600);margin-top:3px">Paper</div></div>
-    <div style="text-align:center"><div style="width:46px;height:46px;background:#FD8E8C;border-radius:50%"></div><div style="font-size:11px;color:var(--color-neutral-600);margin-top:3px">Coral</div></div>
-  </div>
-  <div style="font-size:11px;color:var(--color-neutral-600);margin-bottom:8px">Typography</div>
-  <div class="blueprint" style="padding:var(--space-3);margin-bottom:var(--space-4)">
-    <div style="font-family:'Barlow Condensed',system-ui,sans-serif;font-weight:600;font-size:30px;line-height:1">Barlow Condensed</div>
-    <div style="font-size:11px;color:var(--color-neutral-600)">Headlines · CTAs · display</div>
-    <div style="font-family:'Barlow',system-ui,sans-serif;font-size:15px;margin-top:8px">Barlow — body copy and captions.</div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">
-    <div class="blueprint" style="padding:var(--space-3)">
-      <div style="font-size:12px;font-weight:600;color:var(--color-accent-700);margin-bottom:6px">Do</div>
-      <ul style="margin:0;padding-left:16px;font-size:12px;line-height:1.6;color:var(--color-neutral-800)"><li>Keep logo clear-space ≥ logo height</li><li>Use the steel accent for emphasis</li><li>Left-align headlines on a grid</li></ul>
-    </div>
-    <div class="blueprint" style="padding:var(--space-3)">
-      <div style="font-size:12px;font-weight:600;color:var(--color-neutral-700);margin-bottom:6px">Don't</div>
-      <ul style="margin:0;padding-left:16px;font-size:12px;line-height:1.6;color:var(--color-neutral-800)"><li>Introduce off-brand colours</li><li>Stretch or recolour the logo</li><li>Set body copy in the display face</li></ul>
-    </div>
-  </div>
-</div></div>
+      <div style="padding:var(--space-6);max-width:900px">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:var(--space-5)">
+          <sc-if value="{{ guide.hasLogo }}" hint-placeholder-val="{{ false }}"><img src="{{ guide.logoUrl }}" alt="" style="width:72px;height:72px;object-fit:contain;border-radius:18px;background:var(--surface-2);border:1px solid var(--color-divider)"></sc-if>
+          <sc-if value="{{ guide.noLogo }}" hint-placeholder-val="{{ true }}"><span style="width:72px;height:72px;flex:none;border-radius:18px;display:grid;place-items:center;font-family:var(--font-heading);font-size:22px;color:{{ guide.onShade }};background:{{ guide.shade }}">{{ guide.tile }}</span></sc-if>
+          <div style="min-width:0;flex:1">
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:22px">{{ guide.name }}</div>
+            <div style="font-size:13px;color:var(--color-neutral-600);margin-top:2px">{{ guide.meta }}</div>
+          </div>
+          <button type="button" class="btn btn-primary" onClick="{{ openGuide }}">Edit guidelines</button>
+        </div>
+        <div style="font-size:11px;color:var(--color-neutral-600);margin-bottom:8px">Logo</div>
+        <div class="blueprint" style="padding:var(--space-4);margin-bottom:var(--space-4);display:flex;align-items:center;gap:16px">
+          <sc-if value="{{ guide.hasLogo }}" hint-placeholder-val="{{ false }}"><img src="{{ guide.logoUrl }}" alt="" style="width:88px;height:88px;object-fit:contain"></sc-if>
+          <sc-if value="{{ guide.noLogo }}" hint-placeholder-val="{{ true }}"><div style="width:88px;height:88px;border-radius:16px;border:1px dashed #CDD1DB;display:grid;place-items:center;font-size:12px;color:var(--color-neutral-600);text-align:center;padding:8px">No logo yet</div></sc-if>
+          <div>
+            <div style="font-size:14px;font-weight:500">{{ guide.logoName }}</div>
+            <div style="font-size:12px;color:var(--color-neutral-600);margin-top:4px">Used on posts, the feed, and review. Keep clear space at least the height of the mark.</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--color-neutral-600);margin-bottom:8px">Colours</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:var(--space-4)">
+          <sc-for list="{{ guide.colors }}" as="c" hint-placeholder-count="4">
+            <div class="blueprint" style="padding:10px 12px;min-width:108px">
+              <div style="height:54px;border-radius:12px;background:{{ c.hex }}"></div>
+              <div style="font-size:13px;font-weight:500;margin-top:8px">{{ c.name }}</div>
+              <div style="font-size:11px;color:var(--color-neutral-600)">{{ c.hex }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ guide.emptyColors }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:var(--color-neutral-600);margin-bottom:var(--space-4)">No colours yet. Edit guidelines to add the palette.</div></sc-if>
+        <div style="font-size:11px;color:var(--color-neutral-600);margin-bottom:8px">Fonts</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-4)">
+          <div class="blueprint" style="padding:var(--space-4)">
+            <div style="font-size:11px;color:var(--color-neutral-600)">Display</div>
+            <div style="font-family:{{ guide.displayStack }};font-weight:600;font-size:32px;line-height:1.05;margin-top:6px">{{ guide.displayFont }}</div>
+            <div style="font-size:12px;color:var(--color-neutral-600);margin-top:6px">Headlines and calls to action</div>
+          </div>
+          <div class="blueprint" style="padding:var(--space-4)">
+            <div style="font-size:11px;color:var(--color-neutral-600)">Body</div>
+            <div style="font-family:{{ guide.bodyStack }};font-size:22px;line-height:1.2;margin-top:8px">{{ guide.bodyFont }}</div>
+            <div style="font-family:{{ guide.bodyStack }};font-size:14px;margin-top:8px;color:var(--color-neutral-800)">{{ guide.bodySample }}</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">
+          <div class="blueprint" style="padding:var(--space-3)">
+            <div style="font-size:12px;font-weight:600;color:var(--color-accent-700);margin-bottom:6px">Do</div>
+            <sc-if value="{{ guide.hasDos }}" hint-placeholder-val="{{ true }}"><ul style="margin:0;padding-left:16px;font-size:12px;line-height:1.6;color:var(--color-neutral-800)"><sc-for list="{{ guide.dos }}" as="item" hint-placeholder-count="3"><li>{{ item.text }}</li></sc-for></ul></sc-if>
+            <sc-if value="{{ guide.noDos }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:var(--color-neutral-600)">None yet.</div></sc-if>
+          </div>
+          <div class="blueprint" style="padding:var(--space-3)">
+            <div style="font-size:12px;font-weight:600;color:var(--color-neutral-700);margin-bottom:6px">Don't</div>
+            <sc-if value="{{ guide.hasDonts }}" hint-placeholder-val="{{ true }}"><ul style="margin:0;padding-left:16px;font-size:12px;line-height:1.6;color:var(--color-neutral-800)"><sc-for list="{{ guide.donts }}" as="item" hint-placeholder-count="3"><li>{{ item.text }}</li></sc-for></ul></sc-if>
+            <sc-if value="{{ guide.noDonts }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:var(--color-neutral-600)">None yet.</div></sc-if>
+          </div>
+        </div>
+      </div>
     </sc-if>
 
     <!-- ═══════════ FEED PREVIEW ═══════════ -->
@@ -1089,6 +1108,59 @@
     </div>
   </sc-if>
 
+  <!-- ══ BRAND GUIDELINES ══ -->
+  <sc-if value="{{ guideOpen }}" hint-placeholder-val="{{ false }}">
+    <div class="dialog-backdrop" onClick="{{ closeGuide }}">
+      <div class="dialog" style="width:min(560px,100%);max-height:min(88vh,860px);overflow:auto" onClick="{{ stop }}">
+        <div class="dialog-title">Brand guidelines</div>
+        <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <div class="field">
+            <label>Logo</label>
+            <div style="display:flex;align-items:center;gap:12px">
+              <sc-if value="{{ draftHasLogo }}" hint-placeholder-val="{{ false }}"><img src="{{ draftLogoUrl }}" alt="" style="width:64px;height:64px;object-fit:contain;border-radius:14px;background:var(--surface-2);border:1px solid var(--color-divider)"></sc-if>
+              <sc-if value="{{ draftNoLogo }}" hint-placeholder-val="{{ true }}"><div style="width:64px;height:64px;border-radius:14px;border:1px dashed #CDD1DB;display:grid;place-items:center;font-size:11px;color:var(--color-neutral-600)">Logo</div></sc-if>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="font-size:13px">{{ draftLogoName }}</div>
+                <div style="display:flex;gap:8px">
+                  <label class="btn btn-secondary" style="cursor:pointer">Upload logo<input type="file" accept="image/*,.svg" onChange="{{ onGuideLogo }}" style="display:none"></label>
+                  <sc-if value="{{ draftHasLogo }}" hint-placeholder-val="{{ false }}"><button type="button" class="btn btn-ghost" onClick="{{ clearGuideLogo }}">Remove</button></sc-if>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Colours</label>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ draftColors }}" as="c" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <input type="color" value="{{ c.hex }}" onInput="{{ c.onHex }}" style="width:42px;height:42px;padding:0;border:0;background:transparent;cursor:pointer">
+                  <input class="input" placeholder="Name" value="{{ c.name }}" onInput="{{ c.onName }}" style="flex:1">
+                  <input class="input" placeholder="#000000" value="{{ c.hex }}" onInput="{{ c.onHex }}" style="width:110px">
+                  <button type="button" class="btn btn-ghost" style="min-height:36px;padding:4px 10px" onClick="{{ c.remove }}">Remove</button>
+                </div>
+              </sc-for>
+            </div>
+            <button type="button" class="btn btn-secondary" style="margin-top:8px" onClick="{{ addGuideColor }}">Add colour</button>
+          </div>
+          <div style="display:flex;gap:var(--space-3)">
+            <div class="field" style="flex:1"><label>Display font</label>
+              <select class="input" value="{{ draftDisplayFont }}" onChange="{{ onDraftDisplay }}"><sc-for list="{{ fontOptions }}" as="f" hint-placeholder-count="6"><option>{{ f }}</option></sc-for></select>
+              <div style="font-family:{{ draftDisplayStack }};font-weight:600;font-size:22px;margin-top:8px">{{ draftDisplayFont }}</div>
+            </div>
+            <div class="field" style="flex:1"><label>Body font</label>
+              <select class="input" value="{{ draftBodyFont }}" onChange="{{ onDraftBody }}"><sc-for list="{{ fontOptions }}" as="f" hint-placeholder-count="6"><option>{{ f }}</option></sc-for></select>
+              <div style="font-family:{{ draftBodyStack }};font-size:16px;margin-top:8px">{{ draftBodyFont }}</div>
+            </div>
+          </div>
+          <div class="field"><label>Do — one rule per line</label><textarea class="input" placeholder="Keep logo clear-space at least the height of the mark" value="{{ draftDos }}" onInput="{{ onDraftDos }}"></textarea></div>
+          <div class="field"><label>Don't — one rule per line</label><textarea class="input" placeholder="Stretch or recolour the logo" value="{{ draftDonts }}" onInput="{{ onDraftDonts }}"></textarea></div>
+          <sc-if value="{{ hasGuideError }}" hint-placeholder-val="{{ false }}"><div style="padding:10px 12px;border-radius:14px;background:#FFF0EF;color:#4E1414;font-size:13px">{{ guideError }}</div></sc-if>
+        </div>
+        <div class="dialog-actions"><button class="btn btn-ghost" onClick="{{ closeGuide }}">Cancel</button><button class="btn btn-primary" onClick="{{ saveGuide }}">Save guidelines</button></div>
+      </div>
+    </div>
+  </sc-if>
+
   <!-- ══ TOAST ══ -->
   <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--color-neutral-900);border-radius:999px;color:var(--on-shade);padding:10px 18px;font-size:13px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:8px;z-index:50">
@@ -1104,10 +1176,26 @@ class Component extends DCLogic {
   constructor(props){
     super(props);
     const brands = [
-      {id:'nw', name:'Northwind Coffee', tile:'NW', shade:'#FD8E8C', onShade:'#10141A', mute:'#5A2222'},
-      {id:'vg', name:'Vantage Athletic', tile:'VG', shade:'#83A2DB', onShade:'#10141A', mute:'#1F3152'},
-      {id:'lm', name:'Lumen Skincare',   tile:'LM', shade:'#FFCE87', onShade:'#10141A', mute:'#5A3D10'},
-      {id:'mb', name:'Meridian Bank',    tile:'MB', shade:'#B9DEFF', onShade:'#10141A', mute:'#24415F'},
+      {id:'nw', name:'Northwind Coffee', tile:'NW', shade:'#FD8E8C', onShade:'#10141A', mute:'#5A2222', guide:{
+        logoName:'', logoUrl:'', displayFont:'Fraunces', bodyFont:'Outfit',
+        colors:[{id:'nw1',name:'Coral',hex:'#FD8E8C'},{id:'nw2',name:'Espresso',hex:'#3A2418'},{id:'nw3',name:'Cream',hex:'#F6E7D4'},{id:'nw4',name:'Ink',hex:'#10141A'}],
+        dos:['Keep logo clear-space at least the height of the mark','Use coral for emphasis','Left-align headlines'],
+        donts:['Stretch or recolour the logo','Introduce off-brand blues','Set body copy in the display face']}},
+      {id:'vg', name:'Vantage Athletic', tile:'VG', shade:'#83A2DB', onShade:'#10141A', mute:'#1F3152', guide:{
+        logoName:'', logoUrl:'', displayFont:'Barlow Condensed', bodyFont:'Barlow',
+        colors:[{id:'vg1',name:'Track blue',hex:'#83A2DB'},{id:'vg2',name:'Ink',hex:'#10141A'},{id:'vg3',name:'Butter',hex:'#FFCE87'},{id:'vg4',name:'Paper',hex:'#FBFBFB'}],
+        dos:['Use track blue for performance claims','Keep type condensed on headlines'],
+        donts:['Soften the mark into a script','Place the logo on a busy photo without a plate']}},
+      {id:'lm', name:'Lumen Skincare', tile:'LM', shade:'#FFCE87', onShade:'#10141A', mute:'#5A3D10', guide:{
+        logoName:'', logoUrl:'', displayFont:'Newsreader', bodyFont:'DM Sans',
+        colors:[{id:'lm1',name:'Butter',hex:'#FFCE87'},{id:'lm2',name:'Blush',hex:'#FD8E8C'},{id:'lm3',name:'Cream',hex:'#FBF6EE'},{id:'lm4',name:'Ink',hex:'#29292C'}],
+        dos:['Keep photography warm and unretouched','Use blush only for small accents'],
+        donts:['Add clinical blues','Outline the wordmark']}},
+      {id:'mb', name:'Meridian Bank', tile:'MB', shade:'#B9DEFF', onShade:'#10141A', mute:'#24415F', guide:{
+        logoName:'', logoUrl:'', displayFont:'Libre Baskerville', bodyFont:'Urbanist',
+        colors:[{id:'mb1',name:'Sky',hex:'#B9DEFF'},{id:'mb2',name:'Blue',hex:'#83A2DB'},{id:'mb3',name:'Ink',hex:'#10141A'},{id:'mb4',name:'Paper',hex:'#FBFBFB'}],
+        dos:['State rates in the body face','Keep the lockup horizontal'],
+        donts:['Use coral from another brand','Animate the wordmark']}},
     ];
     let uid = 1;
     const mk = (o) => {
@@ -1214,6 +1302,7 @@ class Component extends DCLogic {
       subBrand:'Northwind Coffee', subTitle:'', subPlatform:'Instagram — Post', subDate:'', subCaption:'',
       subFormat:'single', subPlatforms:['Instagram'], subSlides:[], subCaptionLater:false, subError:'',
       slideIndex:0, captionDraft:null,
+      guideOpen:false, guideDraft:null, guideError:'',
       brands, designs, users, notes, tick:0,
       authed:false, sessionId:null, loginEmail:'', loginPassword:'', loginError:'',
     };
@@ -1425,7 +1514,61 @@ class Component extends DCLogic {
 
   // admin
   setRole(uid, bid, role){ const u=this.state.users.find(x=>x.id===uid); u.roles[bid]=role; this.bump(); this.flash('Role updated'); }
-  createBrand(){ const n=this.state.brands.length+1; const name='New Brand '+n; this.state.brands.push({id:'b'+Date.now(), name, tile:'N'+n, shade:'var(--color-neutral-600)'}); this.state.users.forEach(u=>{ u.roles[this.state.brands[this.state.brands.length-1].id]='—'; }); this.bump(); this.flash('Brand workspace created'); }
+  createBrand(){ const n=this.state.brands.length+1; const name='New Brand '+n; this.state.brands.push({id:'b'+Date.now(), name, tile:'N'+n, shade:'#83A2DB', onShade:'#10141A', mute:'#1F3152', guide:{logoName:'', logoUrl:'', colors:[], displayFont:'Urbanist', bodyFont:'Urbanist', dos:[], donts:[]}}); this.state.users.forEach(u=>{ u.roles[this.state.brands[this.state.brands.length-1].id]='—'; }); this.bump(); this.flash('Brand workspace created'); }
+
+  fontStack(name){ const n=(name||'Urbanist').replace(/'/g,''); return "'"+n+"',system-ui,sans-serif"; }
+  normHex(v){ let s=(v||'').trim(); if(!s.startsWith('#')) s='#'+s; if(/^#[0-9a-fA-F]{3}$/.test(s)) s='#'+s.slice(1).split('').map(ch=>ch+ch).join(''); if(/^#[0-9a-fA-F]{6}$/.test(s)) return s.toUpperCase(); return ''; }
+  guideBrandObj(){
+    const s=this.state;
+    const d=s.designId?this.design(s.designId):null;
+    if((s.view==='review'||s.view==='compare') && d) return this.brand(d.brandId);
+    return (s.brandId && this.brand(s.brandId)) || s.brands[0];
+  }
+  openGuide(){
+    const b=this.guideBrandObj();
+    const g=b.guide||{logoName:'',logoUrl:'',colors:[],displayFont:'Urbanist',bodyFont:'Urbanist',dos:[],donts:[]};
+    this.setState({guideOpen:true, guideError:'', guideDraft:{
+      logoName:g.logoName||'', logoUrl:g.logoUrl||'',
+      colors:(g.colors||[]).map(c=>({id:c.id, name:c.name, hex:c.hex})),
+      displayFont:g.displayFont||'Urbanist', bodyFont:g.bodyFont||'Urbanist',
+      dosText:(g.dos||[]).join('\n'), dontsText:(g.donts||[]).join('\n'),
+    }});
+  }
+  closeGuide(){ this.setState({guideOpen:false, guideDraft:null, guideError:''}); }
+  onGuideLogo(e){
+    const f=e.target.files&&e.target.files[0];
+    if(!f) return;
+    const reader=new FileReader();
+    reader.onload=()=>{ this.setState(s=>s.guideDraft?{guideDraft:Object.assign({}, s.guideDraft, {logoName:f.name, logoUrl:reader.result})}:null); };
+    reader.readAsDataURL(f);
+    e.target.value='';
+  }
+  clearGuideLogo(){ this.setState(s=>s.guideDraft?{guideDraft:Object.assign({}, s.guideDraft, {logoName:'', logoUrl:''})}:null); }
+  addGuideColor(){ this.setState(s=>s.guideDraft?{guideDraft:Object.assign({}, s.guideDraft, {colors:s.guideDraft.colors.concat([{id:'c'+Date.now(), name:'New colour', hex:'#83A2DB'}])})}:null); }
+  removeGuideColor(id){ this.setState(s=>s.guideDraft?{guideDraft:Object.assign({}, s.guideDraft, {colors:s.guideDraft.colors.filter(c=>c.id!==id)})}:null); }
+  onGuideColor(id, key, e){ const v=e.target.value; this.setState(s=>s.guideDraft?{guideDraft:Object.assign({}, s.guideDraft, {colors:s.guideDraft.colors.map(c=>c.id===id?Object.assign({}, c, {[key]:v}):c)})}:null); }
+  onDraftDisplay(e){ const v=e.target.value; this.setState(s=>s.guideDraft?{guideDraft:Object.assign({}, s.guideDraft, {displayFont:v})}:null); }
+  onDraftBody(e){ const v=e.target.value; this.setState(s=>s.guideDraft?{guideDraft:Object.assign({}, s.guideDraft, {bodyFont:v})}:null); }
+  onDraftDos(e){ const v=e.target.value; this.setState(s=>s.guideDraft?{guideDraft:Object.assign({}, s.guideDraft, {dosText:v})}:null); }
+  onDraftDonts(e){ const v=e.target.value; this.setState(s=>s.guideDraft?{guideDraft:Object.assign({}, s.guideDraft, {dontsText:v})}:null); }
+  saveGuide(){
+    const b=this.guideBrandObj();
+    const d=this.state.guideDraft;
+    if(!b || !d) return;
+    const colors=d.colors.map(c=>({id:c.id, name:(c.name||'').trim()||'Colour', hex:this.normHex(c.hex)})).filter(c=>c.hex);
+    if(!colors.length){ this.setState({guideError:'Add at least one brand colour.'}); return; }
+    b.guide={
+      logoName:d.logoUrl?(d.logoName||'Logo'):'',
+      logoUrl:d.logoUrl||'',
+      colors,
+      displayFont:d.displayFont||'Urbanist',
+      bodyFont:d.bodyFont||'Urbanist',
+      dos:(d.dosText||'').split('\n').map(t=>t.trim()).filter(Boolean),
+      donts:(d.dontsText||'').split('\n').map(t=>t.trim()).filter(Boolean),
+    };
+    this.setState({guideOpen:false, guideDraft:null, guideError:''});
+    this.flash('Brand guidelines saved');
+  }
 
   // notifications
   openNote(n){ n.unread=false; if(n.designId) this.openDesign(n.designId); else this.bump(); }
@@ -1622,6 +1765,27 @@ class Component extends DCLogic {
       queue:{crumb:cb?cb.name:'',title:'Review queue'}, approved:{crumb:cb?cb.name:'',title:'Approved to post'}, calendar:{crumb:cb?cb.name:'',title:'Schedule'}, guidelines:{crumb:cb?cb.name:'',title:'Brand guidelines'}, review:{crumb:cb?cb.name:'',title:(d?d.title:'Review')}, compare:{crumb:cb?cb.name:'',title:'Version comparison'}, plans:{crumb:cb?cb.name:'',title:'Content plan'}, planDetail:{crumb:cb?cb.name:'',title:'Content plan'}, feed:{crumb:cb?cb.name:'',title:'Feed preview'} };
     const page=titles[s.view]||{crumb:'',title:''};
     const guideBrand = cb? cb.name : (d? this.brand(d.brandId).name : s.brands[0].name);
+    const gb = this.guideBrandObj();
+    const gg = gb.guide || {logoName:'', logoUrl:'', colors:[], displayFont:'Urbanist', bodyFont:'Urbanist', dos:[], donts:[]};
+    const guide = {
+      name:gb.name, tile:gb.tile, shade:gb.shade, onShade:gb.onShade,
+      meta: (gg.logoUrl?'Logo on file':'No logo yet')+' · '+(gg.colors||[]).length+' colours',
+      logoName: gg.logoUrl ? (gg.logoName||'Logo') : 'No logo uploaded',
+      hasLogo: !!gg.logoUrl, noLogo: !gg.logoUrl, logoUrl: gg.logoUrl||'',
+      colors: (gg.colors||[]).map(c=>({name:c.name, hex:c.hex})),
+      emptyColors: !(gg.colors&&gg.colors.length),
+      displayFont: gg.displayFont||'Urbanist', bodyFont: gg.bodyFont||'Urbanist',
+      displayStack: this.fontStack(gg.displayFont), bodyStack: this.fontStack(gg.bodyFont),
+      bodySample: (gg.bodyFont||'Urbanist')+' — body copy and captions.',
+      dos: (gg.dos||[]).map(t=>({text:t})), donts: (gg.donts||[]).map(t=>({text:t})),
+      hasDos: !!(gg.dos&&gg.dos.length), noDos: !(gg.dos&&gg.dos.length),
+      hasDonts: !!(gg.donts&&gg.donts.length), noDonts: !(gg.donts&&gg.donts.length),
+    };
+    const gd = s.guideDraft;
+    const FONTS = ['Urbanist','Barlow','Barlow Condensed','Fraunces','Outfit','Newsreader','DM Sans','Libre Baskerville'];
+    const fontOptions = FONTS.slice();
+    if(gd && fontOptions.indexOf(gd.displayFont)<0) fontOptions.push(gd.displayFont);
+    if(gd && fontOptions.indexOf(gd.bodyFont)<0) fontOptions.push(gd.bodyFont);
 
     const openCommentsWarn = (()=>{ if(!d) return ''; const n=d.comments.filter(c=>!c.resolved).length; if(!n) return '';
       return n===1 ? 'Heads up: 1 comment is still open on this design.' : 'Heads up: '+n+' comments are still open on this design.'; })();
@@ -1711,7 +1875,16 @@ class Component extends DCLogic {
       submitOpen:s.submitOpen, approveOpen:s.approveOpen, changesOpen:s.changesOpen, changesNote:s.changesNote,
       subBrand:s.subBrand, subTitle:s.subTitle, subPlatform:s.subPlatform, subDate:s.subDate, subCaption:s.subCaption,
       brandOptions:s.brands.map(b=>b.name),
-      openCommentsWarn, guideBrand,
+      openCommentsWarn, guideBrand, guide,
+      guideOpen:s.guideOpen, openGuide:()=>this.openGuide(), closeGuide:()=>this.closeGuide(), saveGuide:()=>this.saveGuide(),
+      onGuideLogo:(e)=>this.onGuideLogo(e), clearGuideLogo:()=>this.clearGuideLogo(), addGuideColor:()=>this.addGuideColor(),
+      draftHasLogo: !!(gd&&gd.logoUrl), draftNoLogo: !(gd&&gd.logoUrl), draftLogoUrl: gd?gd.logoUrl:'', draftLogoName: gd&&gd.logoUrl?(gd.logoName||'Logo'):'No logo yet',
+      draftColors: (gd?gd.colors:[]).map(c=>({name:c.name, hex:c.hex, onName:(e)=>this.onGuideColor(c.id,'name',e), onHex:(e)=>this.onGuideColor(c.id,'hex',e), remove:()=>this.removeGuideColor(c.id)})),
+      fontOptions, draftDisplayFont: gd?gd.displayFont:'Urbanist', draftBodyFont: gd?gd.bodyFont:'Urbanist',
+      draftDisplayStack: this.fontStack(gd?gd.displayFont:'Urbanist'), draftBodyStack: this.fontStack(gd?gd.bodyFont:'Urbanist'),
+      onDraftDisplay:(e)=>this.onDraftDisplay(e), onDraftBody:(e)=>this.onDraftBody(e),
+      draftDos: gd?gd.dosText:'', draftDonts: gd?gd.dontsText:'', onDraftDos:(e)=>this.onDraftDos(e), onDraftDonts:(e)=>this.onDraftDonts(e),
+      hasGuideError: !!s.guideError, guideError: s.guideError||'',
       toast:s.toast, stop:(e)=>this.stop(e),
     };
   }
