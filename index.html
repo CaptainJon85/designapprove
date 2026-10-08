@@ -108,7 +108,10 @@
   .seg-opt{border-radius:999px;padding:8px 16px;font-size:13px}
   .seg-opt + .seg-opt{border-left:0}
   .seg-opt input{position:absolute;opacity:0;pointer-events:none}
-  .seg-opt:has(input:checked){background:var(--ink);color:#fff}
+  .seg-opt:has(input:checked),.seg-opt.on{background:var(--ink);color:#fff}
+  button.seg-opt{border:0;background:transparent;cursor:pointer;font:inherit;font-size:13px;font-weight:500;color:inherit}
+  .pchip{display:inline-flex;align-items:center;border:0;cursor:pointer;font:inherit;font-size:13px;font-weight:500;padding:8px 14px;border-radius:999px;background:var(--surface-2);color:var(--ink)}
+  .pchip.on{background:var(--ink);color:#fff}
   .seg-opt:not(:has(input:checked)):hover{background:rgba(255,255,255,.8)}
   .table th{font-size:12px;letter-spacing:0;text-transform:none;font-weight:400;color:#7A7F8A;border-bottom:1px solid var(--color-divider);padding:14px 12px}
   .table td{padding:12px;border-bottom:1px solid #EEF0F3}
@@ -352,6 +355,7 @@
                 <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.title }}</div>
                 <div style="display:flex;align-items:center;gap:6px;margin-top:7px">
                   <span class="tag {{ d.statusClass }}">{{ d.stateLabel }}</span>
+                  <sc-if value="{{ d.isCarousel }}" hint-placeholder-val="{{ false }}"><span class="tag tag-neutral">{{ d.carouselLabel }}</span></sc-if>
                   <span style="margin-left:auto;font-size:11px;color:var(--color-neutral-600)">v{{ d.vcount }} · {{ d.ageLabel }}</span>
                 </div>
               </div>
@@ -459,6 +463,15 @@
                   </sc-if>
                 </div>
 
+                <sc-if value="{{ sd.isCarousel }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--color-divider)">
+                    <button type="button" class="iconbtn" style="width:32px;height:32px" onClick="{{ prevSlide }}" title="Previous slide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M15 18l-6-6 6-6"/></svg></button>
+                    <div style="font-size:12px;font-weight:500">{{ sd.slideLabel }}</div>
+                    <div style="font-size:12px;color:var(--color-neutral-600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ sd.slideName }}</div>
+                    <button type="button" class="iconbtn" style="width:32px;height:32px;margin-left:auto" onClick="{{ nextSlide }}" title="Next slide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18l6-6-6-6"/></svg></button>
+                  </div>
+                </sc-if>
+
                 <sc-if value="{{ sd.hasActions }}" hint-placeholder-val="{{ true }}">
                   <div>
                     <div class="acts">
@@ -475,6 +488,9 @@
                         <span>·</span>
                         <span>{{ sd.tagCount }}</span>
                       </div>
+                      <sc-if value="{{ sd.needsCaption }}" hint-placeholder-val="{{ false }}">
+                        <button type="button" class="btn btn-secondary" style="margin-top:10px" onClick="{{ openCaptions }}">Add captions</button>
+                      </sc-if>
                     </div>
                   </div>
                 </sc-if>
@@ -550,9 +566,36 @@
               <!-- details tab -->
               <sc-if value="{{ panel.details }}" hint-placeholder-val="{{ false }}">
                 <div style="display:flex;flex-direction:column;gap:12px">
-                  <div><div style="font-size:11px;color:var(--color-neutral-600)">Caption / copy</div><div style="font-size:13px;margin-top:3px">{{ sd.caption }}</div></div>
+                  <div>
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                      <div style="font-size:11px;color:var(--color-neutral-600)">Captions</div>
+                      <sc-if value="{{ sd.needsCaption }}" hint-placeholder-val="{{ false }}"><span class="tag tag-outline">Add later</span></sc-if>
+                      <sc-if value="{{ captionEditorClosed }}" hint-placeholder-val="{{ true }}"><button type="button" class="btn btn-ghost" style="margin-left:auto;min-height:32px;padding:4px 10px;font-size:12px" onClick="{{ openCaptions }}">{{ sd.captionAction }}</button></sc-if>
+                    </div>
+                    <sc-if value="{{ captionEditorOpen }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;flex-direction:column;gap:10px">
+                        <sc-for list="{{ captionFields }}" as="c" hint-placeholder-count="1">
+                          <div class="field">
+                            <label>{{ c.name }}</label>
+                            <textarea class="input" placeholder="Write the caption for this slide…" value="{{ c.caption }}" onInput="{{ c.onInput }}"></textarea>
+                          </div>
+                        </sc-for>
+                        <div style="display:flex;gap:8px">
+                          <button type="button" class="btn btn-primary" onClick="{{ saveCaptions }}">Save captions</button>
+                          <button type="button" class="btn btn-ghost" onClick="{{ cancelCaptions }}">Cancel</button>
+                        </div>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ captionEditorClosed }}" hint-placeholder-val="{{ true }}">
+                      <div style="display:flex;flex-direction:column;gap:8px">
+                        <sc-for list="{{ sd.captionList }}" as="c" hint-placeholder-count="1">
+                          <div style="font-size:13px"><span style="font-weight:500">{{ c.name }}</span> · <span style="color:var(--color-neutral-700)">{{ c.caption }}</span></div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
                   <div style="display:flex;gap:var(--space-4)">
-                    <div><div style="font-size:11px;color:var(--color-neutral-600)">Platform</div><div style="font-size:13px;margin-top:3px">{{ sd.platform }}</div></div>
+                    <div><div style="font-size:11px;color:var(--color-neutral-600)">Platforms</div><div style="font-size:13px;margin-top:3px">{{ sd.platform }}</div></div>
                     <div><div style="font-size:11px;color:var(--color-neutral-600)">Campaign</div><div style="font-size:13px;margin-top:3px">{{ sd.campaign }}</div></div>
                     <div><div style="font-size:11px;color:var(--color-neutral-600)">Post date</div><div style="font-size:13px;margin-top:3px">{{ sd.postLabel }}</div></div>
                   </div>
@@ -916,13 +959,27 @@
   <!-- ══ SUBMIT MODAL ══ -->
   <sc-if value="{{ submitOpen }}" hint-placeholder-val="{{ false }}">
     <div class="dialog-backdrop" onClick="{{ closeSubmit }}">
-      <div class="dialog" style="width:min(520px,100%)" onClick="{{ stop }}">
+      <div class="dialog" style="width:min(560px,100%);max-height:min(88vh,860px);overflow:auto" onClick="{{ stop }}">
         <div class="dialog-title">Submit a design</div>
         <div style="display:flex;flex-direction:column;gap:var(--space-3)">
           <div class="field"><label>Brand</label><select class="input" value="{{ subBrand }}" onChange="{{ onSubBrand }}"><sc-for list="{{ brandOptions }}" as="o" hint-placeholder-count="4"><option>{{ o }}</option></sc-for></select></div>
           <div class="field"><label>Title</label><input class="input" placeholder="e.g. Summer launch — carousel 1" value="{{ subTitle }}" onInput="{{ onSubTitle }}"></div>
+          <div class="field">
+            <label>Format</label>
+            <div class="seg">
+              <button type="button" class="{{ formatSingleClass }}" onClick="{{ setFormatSingle }}">Single image</button>
+              <button type="button" class="{{ formatCarouselClass }}" onClick="{{ setFormatCarousel }}">Carousel</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Platforms</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" class="{{ platIgClass }}" onClick="{{ toggleIg }}">Instagram</button>
+              <button type="button" class="{{ platFbClass }}" onClick="{{ toggleFb }}">Facebook</button>
+              <button type="button" class="{{ platLiClass }}" onClick="{{ toggleLi }}">LinkedIn</button>
+            </div>
+          </div>
           <div style="display:flex;gap:var(--space-3)">
-            <div class="field" style="flex:1"><label>Platform</label><select class="input" value="{{ subPlatform }}" onChange="{{ onSubPlatform }}"><option>Instagram — Post</option><option>Instagram — Story</option><option>LinkedIn</option><option>TikTok</option><option>X</option></select></div>
             <div class="field" style="flex:1;position:relative"><label>Intended post date</label>
             <button type="button" class="input" style="display:flex;align-items:center;gap:8px;text-align:left;cursor:pointer;background:var(--surface-1);color: {{ subDateColor }}" onClick="{{ togglePicker }}">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:15px;height:15px;stroke-width:1.5;color:var(--color-neutral-600)"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
@@ -948,11 +1005,47 @@
             </sc-if>
           </div>
           </div>
-          <div class="field"><label>Caption / copy</label><textarea class="input" placeholder="Paste the caption that ships with this post…" value="{{ subCaption }}" onInput="{{ onSubCaption }}"></textarea></div>
-          <div class="blueprint" style="padding:var(--space-6);text-align:center;border-style:dashed">
+          <label class="blueprint" style="display:block;padding:22px 16px;text-align:center;border:1px dashed #CDD1DB;cursor:pointer;border-radius:20px">
+            <input type="file" accept="image/*,.pdf" multiple="true" onChange="{{ onFiles }}" style="display:none">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:22px;height:22px;stroke-width:1.5;color:var(--color-neutral-600);margin:0 auto 6px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
-            <div style="font-size:13px;color:var(--color-neutral-700)">Drop image or PDF here, or click to browse</div>
+            <div style="font-size:13px;color:var(--color-neutral-700)">{{ uploadHint }}</div>
+          </label>
+          <sc-if value="{{ isCarousel }}" hint-placeholder-val="{{ false }}">
+            <button type="button" class="btn btn-secondary" onClick="{{ addSlide }}">Add another slide</button>
+          </sc-if>
+          <sc-if value="{{ hasSlides }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ subSlides }}" as="sl" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:14px;background:var(--surface-2)">
+                  <span style="width:28px;height:28px;border-radius:8px;background:var(--sky);display:grid;place-items:center;font-size:11px;font-weight:600;flex:none">{{ sl.n }}</span>
+                  <span style="font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ sl.name }}</span>
+                  <button type="button" class="btn btn-ghost" style="margin-left:auto;min-height:28px;padding:2px 8px;font-size:12px" onClick="{{ sl.remove }}">Remove</button>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="font-size:13px;font-weight:500">Captions</div>
+            <button type="button" class="btn btn-ghost" style="margin-left:auto;min-height:32px;padding:4px 10px;font-size:12px" onClick="{{ toggleCaptionLater }}">{{ captionLaterLabel }}</button>
           </div>
+          <sc-if value="{{ captionsNow }}" hint-placeholder-val="{{ true }}">
+            <sc-if value="{{ isCarousel }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ subSlides }}" as="sl" hint-placeholder-count="2">
+                  <div class="field"><label>{{ sl.name }}</label><textarea class="input" placeholder="Caption for this slide" value="{{ sl.caption }}" onInput="{{ sl.onCaption }}"></textarea></div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isSingle }}" hint-placeholder-val="{{ true }}">
+              <div class="field"><label>Caption / copy</label><textarea class="input" placeholder="Paste the caption that ships with this post…" value="{{ subCaption }}" onInput="{{ onSubCaption }}"></textarea></div>
+            </sc-if>
+          </sc-if>
+          <sc-if value="{{ captionsLater }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:13px;color:var(--color-neutral-600)">Captions can be added after upload. A carousel keeps one caption per slide.</div>
+          </sc-if>
+          <sc-if value="{{ hasSubError }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:10px 12px;border-radius:14px;background:#FFF0EF;color:#4E1414;font-size:13px">{{ subError }}</div>
+          </sc-if>
         </div>
         <div class="dialog-actions"><button class="btn btn-ghost" onClick="{{ closeSubmit }}">Cancel</button><button class="btn btn-primary" onClick="{{ doSubmit }}">Submit for review</button></div>
       </div>
@@ -1034,7 +1127,8 @@ class Component extends DCLogic {
           {id:'c2', text:'Caption needs the allergen note for oat.', author:'Jon Falade', at:'1h ago', resolved:false, version:1, general:true},
         ],
         history:[{type:'submit',actor:'Amara Osei',text:'submitted the design',at:'yesterday',dot:'var(--color-accent)'},{type:'review',actor:'Jon Falade',text:'started reviewing',at:'1h ago',dot:'var(--color-accent-2)'}]}),
-      mk({brandId:'nw', title:'Loyalty perks carousel', kicker:'Rewards', headline:'Your 10th is on us.', sub:'Northwind Rewards, simplified.', cta:'Join free', platform:'Instagram — Post', aspect:'1 / 1', submitter:'Devin Cole', state:'Changes Requested', age:3, postD:26, caption:'Ten cups, one free. That simple.', subAt:'3 days ago',
+      mk({brandId:'nw', title:'Loyalty perks carousel', kicker:'Rewards', headline:'Your 10th is on us.', sub:'Northwind Rewards, simplified.', cta:'Join free', platform:'Instagram · Facebook', platforms:['Instagram','Facebook'], format:'carousel', aspect:'1 / 1', submitter:'Devin Cole', state:'Changes Requested', age:3, postD:26, caption:'', captionLater:true, subAt:'3 days ago',
+        slides:[{id:'lp1', name:'Slide 1 — reward', caption:''},{id:'lp2', name:'Slide 2 — how it works', caption:''},{id:'lp3', name:'Slide 3 — join', caption:''}],
         versions:[{n:1,by:'Devin Cole',at:'3 days ago',note:'Initial submission'}],
         comments:[
           {id:'c3', left:'30%', top:'62%', text:'Reward tiers are off-brand blue — use the steel accent from guidelines.', author:'Jon Falade', at:'2 days ago', resolved:false, version:1},
@@ -1118,6 +1212,8 @@ class Component extends DCLogic {
       pickerOpen:false, pickerMonth:6, subDay:null,
       draft:null, commentText:'', generalText:'', changesNote:'', toast:null,
       subBrand:'Northwind Coffee', subTitle:'', subPlatform:'Instagram — Post', subDate:'', subCaption:'',
+      subFormat:'single', subPlatforms:['Instagram'], subSlides:[], subCaptionLater:false, subError:'',
+      slideIndex:0, captionDraft:null,
       brands, designs, users, notes, tick:0,
       authed:false, sessionId:null, loginEmail:'', loginPassword:'', loginError:'',
     };
@@ -1186,7 +1282,7 @@ class Component extends DCLogic {
   pickerNext(){ this.setState(s=>({pickerMonth: s.pickerMonth<7? s.pickerMonth+1 : 7})); }
   pickDay(day, monthIdx){ this.setState({subDay:day, subDate:String(day), pickerOpen:false, pickerMonth:monthIdx}); }
   goGuidelines(id){ this.setState({brandId:id, view:'guidelines'}); }
-  openDesign(id){ const d=this.design(id); this.setState({view:'review', designId:id, brandId:d.brandId, panel:'comments', pinMode:false, draft:null, commentText:'', prevView:this.state.view==='review'?this.state.prevView:this.state.view}); }
+  openDesign(id){ const d=this.design(id); this.setState({view:'review', designId:id, brandId:d.brandId, panel:'comments', pinMode:false, draft:null, commentText:'', slideIndex:0, captionDraft:null, prevView:this.state.view==='review'?this.state.prevView:this.state.view}); }
   back(){ this.setState(s=>({view: s.brandId?'queue':'dashboard'})); }
 
   // review interactions
@@ -1219,15 +1315,113 @@ class Component extends DCLogic {
   exportFile(){ this.flash('Export queued — file downloading'); }
   scheduleDesign(id){ const d=this.design(id); d.state='Scheduled/Posted'; d.history.push({type:'sched', actor:'You', text:'marked scheduled', at:'just now', dot:'var(--color-neutral-600)'}); this.bump(); this.flash('Marked as scheduled'); }
 
+  slidesOf(d){
+    if(d && d.slides && d.slides.length) return d.slides;
+    if(!d) return [];
+    return [{id:'s1', name:'Post', caption:d.caption||''}];
+  }
+  platformNames(d){
+    if(d && d.platforms && d.platforms.length) return d.platforms;
+    if(!d || !d.platform) return [];
+    if(d.platform.indexOf('Instagram')===0) return ['Instagram'];
+    if(d.platform==='LinkedIn') return ['LinkedIn'];
+    return [d.platform];
+  }
+  platShort(d){
+    const map={Instagram:'IG', Facebook:'FB', LinkedIn:'IN', 'Instagram — Post':'IG Post', 'Instagram — Story':'IG Story', TikTok:'TikTok', X:'X'};
+    if(d.platforms && d.platforms.length) return d.platforms.map(p=>map[p]||p).join(' · ');
+    return map[d.platform]||d.platform;
+  }
+  isCarousel(d){ return !!(d && (d.format==='carousel' || (d.slides && d.slides.length>1))); }
+
   // submit modal
-  openSubmit(){ this.setState({submitOpen:true, subBrand:this.state.brandId?this.brand(this.state.brandId).name:this.state.brands[0].name, subTitle:'', subCaption:'', subDate:'', subDay:null, pickerOpen:false, pickerMonth:6}); }
+  openSubmit(){ this.setState({submitOpen:true, subBrand:this.state.brandId?this.brand(this.state.brandId).name:this.state.brands[0].name, subTitle:'', subCaption:'', subDate:'', subDay:null, pickerOpen:false, pickerMonth:6, subFormat:'single', subPlatforms:['Instagram'], subSlides:[], subCaptionLater:false, subError:''}); }
   closeSubmit(){ this.setState({submitOpen:false}); }
-  doSubmit(){ const b=this.state.brands.find(x=>x.name===this.state.subBrand)||this.state.brands[0]; const t=this.state.subTitle.trim()||'Untitled submission'; const d={ id:'d'+Date.now(), brandId:b.id, title:t, kicker:'New', headline:t.split(' ').slice(0,3).join(' ')||'New post', sub:'', cta:'Learn more', platform:this.state.subPlatform, aspect: this.state.subPlatform.includes('Story')?'9 / 16':(this.state.subPlatform.includes('LinkedIn')?'1200 / 628':'1 / 1'), campaign:'—', submitter:'You', state:'Submitted', age:0, postD: parseInt(this.state.subDate)||null, caption:this.state.subCaption, locked:false, comments:[], versions:[{n:1, by:'You', at:'just now', note:'Initial submission'}], history:[{type:'submit', actor:'You', text:'submitted the design', at:'just now', dot:'var(--color-accent)'}] }; this.state.designs.unshift(d); this.state.notes.unshift({id:'n'+Date.now(), type:'submit', title:'You', body:'submitted “'+t+'”.', brand:b.name, at:'just now', unread:false, designId:d.id, icon:'↑'}); this.setState({submitOpen:false, brandId:b.id, view:'queue', filter:'all'}); this.flash('Submitted for review'); }
+  setFormatCarousel(){ this.setState(s=>{
+    const slides = s.subSlides.length>=2 ? s.subSlides : [{id:'s1', name:'Slide 1', caption:''},{id:'s2', name:'Slide 2', caption:''}];
+    return {subFormat:'carousel', subSlides:slides, subError:''};
+  }); }
+  togglePlatform(name){ this.setState(s=>{
+    const has=s.subPlatforms.includes(name);
+    return {subPlatforms: has? s.subPlatforms.filter(p=>p!==name) : s.subPlatforms.concat([name]), subError:''};
+  }); }
+  toggleCaptionLater(){ this.setState(s=>({subCaptionLater:!s.subCaptionLater})); }
+  addSlide(){ this.setState(s=>{
+    const n=s.subSlides.length+1;
+    return {subFormat:'carousel', subSlides:s.subSlides.concat([{id:'sl'+Date.now(), name:'Slide '+n, caption:''}]), subError:''};
+  }); }
+  removeSlide(id){ this.setState(s=>({subSlides:s.subSlides.filter(sl=>sl.id!==id), subError:''})); }
+  onSlideCaption(id, e){ const v=e.target.value; this.setState(s=>({subSlides:s.subSlides.map(sl=>sl.id===id?Object.assign({}, sl, {caption:v}):sl)})); }
+  onFiles(e){
+    const files=Array.from((e.target&&e.target.files)||[]);
+    if(!files.length) return;
+    const added=files.map((f,i)=>({id:'sl'+Date.now()+i, name:f.name, caption:''}));
+    if(this.state.subFormat==='single' && added.length===1) this.setState({subSlides:added, subError:''});
+    else this.setState(s=>({subFormat:'carousel', subSlides:(s.subFormat==='carousel'?s.subSlides:[]).concat(added), subError:''}));
+    e.target.value='';
+  }
+  doSubmit(){
+    const platforms=this.state.subPlatforms.slice();
+    const format=this.state.subFormat;
+    let slides;
+    if(format==='carousel'){
+      slides=this.state.subSlides.map(sl=>({id:sl.id, name:sl.name, caption: this.state.subCaptionLater?'':(sl.caption||'').trim()}));
+    } else {
+      const file=this.state.subSlides[0];
+      slides=[{id:file?file.id:'s1', name:file?file.name:'Post', caption: this.state.subCaptionLater?'':(this.state.subCaption||'').trim()}];
+    }
+    if(!platforms.length){ this.setState({subError:'Choose at least one platform.'}); return; }
+    if(format==='carousel' && slides.length<2){ this.setState({subError:'A carousel needs at least two slides.'}); return; }
+    const b=this.state.brands.find(x=>x.name===this.state.subBrand)||this.state.brands[0];
+    const t=this.state.subTitle.trim()||'Untitled submission';
+    const onlyLi=platforms.length===1 && platforms[0]==='LinkedIn';
+    const caption=slides.map(sl=>sl.caption).filter(Boolean).join('\n\n');
+    const d={ id:'d'+Date.now(), brandId:b.id, title:t, kicker:'New', headline:t.split(' ').slice(0,3).join(' ')||'New post', sub:'', cta:'Learn more',
+      platform:platforms.join(' · '), platforms, format, slides, captionLater: this.state.subCaptionLater || slides.some(sl=>!sl.caption),
+      aspect: onlyLi?'1200 / 628':'1 / 1', campaign:'—', submitter:'You', state:'Submitted', age:0, postD: parseInt(this.state.subDate)||null,
+      caption, locked:false, comments:[], versions:[{n:1, by:'You', at:'just now', note:'Initial submission'}],
+      history:[{type:'submit', actor:'You', text:'submitted the design', at:'just now', dot:'var(--color-accent)'}] };
+    this.state.designs.unshift(d);
+    this.state.notes.unshift({id:'n'+Date.now(), type:'submit', title:'You', body:'submitted “'+t+'”.', brand:b.name, at:'just now', unread:false, designId:d.id, icon:'↑'});
+    this.setState({submitOpen:false, brandId:b.id, view:'queue', filter:'all', designId:d.id});
+    this.flash(d.captionLater ? 'Submitted — captions can be added later' : 'Submitted for review');
+  }
   onSubBrand(e){ this.setState({subBrand:e.target.value}); }
   onSubTitle(e){ this.setState({subTitle:e.target.value}); }
   onSubPlatform(e){ this.setState({subPlatform:e.target.value}); }
   onSubDate(e){ this.setState({subDate:e.target.value}); }
   onSubCaption(e){ this.setState({subCaption:e.target.value}); }
+
+  prevSlide(){ this.setState(s=>({slideIndex: Math.max(0,(s.slideIndex||0)-1)})); }
+  nextSlide(){
+    const d=this.design(this.state.designId);
+    const n=this.slidesOf(d).length;
+    this.setState(s=>({slideIndex: Math.min(Math.max(0,n-1), (s.slideIndex||0)+1)}));
+  }
+  openCaptions(){
+    const d=this.design(this.state.designId);
+    if(!d || d.state==='Rejected/Archived') return;
+    const slides=this.slidesOf(d).map(sl=>({id:sl.id, name:sl.name||'Post', caption:sl.caption||''}));
+    this.setState({panel:'details', captionDraft:{slides}});
+  }
+  onCaptionDraft(id, e){
+    const v=e.target.value;
+    this.setState(s=>({captionDraft: s.captionDraft ? {slides: s.captionDraft.slides.map(sl=>sl.id===id?Object.assign({}, sl, {caption:v}):sl)} : null}));
+  }
+  cancelCaptions(){ this.setState({captionDraft:null}); }
+  saveCaptions(){
+    const d=this.design(this.state.designId);
+    const draft=this.state.captionDraft;
+    if(!d || !draft) return;
+    d.slides=draft.slides.map(sl=>({id:sl.id, name:sl.name, caption:(sl.caption||'').trim()}));
+    if(d.slides.length>1) d.format='carousel';
+    d.caption=d.slides.map(sl=>sl.caption).filter(Boolean).join('\n\n');
+    const missing=d.slides.some(sl=>!sl.caption);
+    d.captionLater=missing;
+    d.history.push({type:'caption', actor:'You', text: missing?'saved captions — some slides still blank':'added captions', at:'just now', dot:'var(--color-accent)'});
+    this.setState({captionDraft:null});
+    this.flash(missing ? 'Saved. You can finish the remaining captions later.' : 'Captions saved');
+  }
 
   // admin
   setRole(uid, bid, role){ const u=this.state.users.find(x=>x.id===uid); u.roles[bid]=role; this.bump(); this.flash('Role updated'); }
@@ -1273,7 +1467,7 @@ class Component extends DCLogic {
     const awaitingList = awaitingRaw.slice().sort((a,b)=>b.age-a.age).map(d=>{ const t=stateTag(d.state); const b=this.brand(d.brandId); return {
       id:d.id, title:d.title, platform:d.platform, brandName:b.name, submitter:d.submitter,
       stateLabel:t.label, statusClass:t.cls, ageLabel:ageStr(d), ageColor: d.age>=48?'var(--color-accent-700)':'var(--color-neutral-600)',
-      platShort: PLAT[d.platform]||d.platform,
+      platShort: this.platShort(d),
       shade:b.shade, onShade:b.onShade, thumbWord:d.headline, open:()=>this.openDesign(d.id) }; });
 
     const brandCards = s.brands.map(b=>({ id:b.id, name:b.name, tile:b.tile, shade:b.shade,
@@ -1288,12 +1482,13 @@ class Component extends DCLogic {
     if(fmap[s.filter]) queueRaw = queueRaw.filter(d=>fmap[s.filter].includes(d.state));
     const queueList = queueRaw.map(d=>{ const t=stateTag(d.state); const b=this.brand(d.brandId); return {
       id:d.id, title:d.title, headline:d.headline, kicker:d.kicker, brandName:b.name, shade:b.shade,
-      stateLabel:t.label, statusClass:t.cls, ageLabel:ageStr(d), vcount:d.versions.length, platShort:PLAT[d.platform]||d.platform,
+      stateLabel:t.label, statusClass:t.cls, ageLabel:ageStr(d), vcount:d.versions.length, platShort:this.platShort(d),
+      isCarousel:this.isCarousel(d), carouselLabel:'Carousel · '+this.slidesOf(d).length,
       onShade:b.onShade, mute:b.mute, open:()=>this.openDesign(d.id) }; });
 
     // selected design
     let sd = {title:'',brandName:'',platform:'',vcount:1,statusClass:'tag-neutral',stateLabel:'',shade:'var(--color-neutral-700)',aspect:'1 / 1',kicker:'',headline:'',sub:'',cta:'',pins:[],commentList:[],versionList:[],historyList:[],caption:'',campaign:'',postLabel:'',locked:false,actionable:false,approvedBy:'',noComments:true,
-      submitter:'',onShade:'#FBFBFB',mute:'#D4D7DE',tile:'',handle:'',headerSub:'',platShort:'',hasHeader:true,hasActions:true,isStory:false,likes:'0',captionText:'',captionTags:'',charCount:0,tagCount:0};
+      submitter:'',onShade:'#FBFBFB',mute:'#D4D7DE',tile:'',handle:'',headerSub:'',platShort:'',hasHeader:true,hasActions:true,isStory:false,isCarousel:false,needsCaption:false,captionAction:'Add captions',captionList:[],slideLabel:'',slideName:'',likes:'0',captionText:'',captionTags:'',charCount:0,tagCount:0};
     let cmp={prevN:1,curN:1,prevAt:'',curAt:'',prevHeadline:'',prevComments:[],changeNote:''};
     const d=this.design(s.designId);
     if(d){ const b=this.brand(d.brandId); const t=stateTag(d.state); const curV=d.versions[d.versions.length-1].n;
@@ -1305,20 +1500,33 @@ class Component extends DCLogic {
         resolved:c.resolved, op: c.resolved?'0.6':'1', canResolve:!d.locked, resolveLabel: c.resolved?'Reopen':'Resolve', toggle:()=>this.toggleComment(c.id) }; });
       const versionList = d.versions.map(v=>({ n:v.n, by:v.by, at:v.at, note:v.note, current:v.n===curV, border: v.n===curV?'var(--color-accent)':'var(--color-divider)' }));
       const historyList = d.history.slice().reverse().map(h=>({ actor:h.actor, text:h.text, at:h.at, dot:h.dot }));
-      sd={ id:d.id, title:d.title, brandName:b.name, platform:d.platform, vcount:d.versions.length,
+      const slides=this.slidesOf(d);
+      const slideIdx=Math.min(s.slideIndex||0, Math.max(0, slides.length-1));
+      const curSlide=slides[slideIdx]||{name:'', caption:''};
+      const carousel=this.isCarousel(d);
+      const capRaw=carousel ? (curSlide.caption||'') : ((curSlide.caption||d.caption||''));
+      const split=splitCaption(capRaw);
+      const needsCaption=slides.some(sl=>!(sl.caption||'').trim());
+      sd={ id:d.id, title:d.title, brandName:b.name, platform:this.platformNames(d).join(' · ')||d.platform, vcount:d.versions.length,
         statusClass:t.cls, stateLabel:t.label, shade:b.shade, aspect:d.aspect, kicker:d.kicker, headline:d.headline, sub:d.sub, cta:d.cta,
         pins, commentList, versionList, historyList, caption:d.caption||'—', campaign:d.campaign, postLabel: d.postD?(d.postD+' Jul'):'—',
         locked:!!d.locked, actionable: !d.locked && d.state!=='Scheduled/Posted', approvedBy:d.approvedBy||'', noComments: activeComments.length===0,
         approved: ['Approved','Scheduled/Posted'].includes(d.state), archived: d.state==='Rejected/Archived', rejectedReason: d.rejectedReason||'archived',
         submitter:d.submitter, onShade:b.onShade, mute:b.mute,
         tile:b.tile, handle:handleFor(b), headerSub: (d.campaign && d.campaign!=='—') ? d.campaign : 'Sponsored',
-        platShort: PLAT[d.platform]||d.platform,
-        isStory: d.platform.indexOf('Story')>=0,
-        hasHeader: d.platform.indexOf('Story')<0,
-        hasActions: d.platform.indexOf('Story')<0,
+        platShort: this.platShort(d),
+        isStory: (d.platform||'').indexOf('Story')>=0,
+        isCarousel: carousel,
+        needsCaption,
+        captionAction: needsCaption?'Add captions':'Edit captions',
+        captionList: slides.map(sl=>({name:sl.name||'Post', caption:(sl.caption||'').trim()||'Not added yet'})),
+        slideLabel: 'Slide '+(slideIdx+1)+' of '+slides.length,
+        slideName: curSlide.name||'',
+        hasHeader: (d.platform||'').indexOf('Story')<0,
+        hasActions: (d.platform||'').indexOf('Story')<0,
         likes: (1200 + (d.title.length*137)%8000).toLocaleString(),
-        captionText: splitCaption(d.caption).text, captionTags: splitCaption(d.caption).tags,
-        charCount: (d.caption||'').length, tagCount: (()=>{ const n=((d.caption||'').match(/#[\w]+/g)||[]).length; return n+' hashtag'+(n===1?'':'s'); })() };
+        captionText: capRaw ? split.text : 'Caption not added yet', captionTags: split.tags,
+        charCount: capRaw.length, tagCount: (()=>{ const n=(capRaw.match(/#[\w]+/g)||[]).length; return n+' hashtag'+(n===1?'':'s'); })() };
       if(d.versions.length>1){ const prev=d.versions[d.versions.length-2]; cmp={ prevN:prev.n, curN:curV, prevAt:prev.at, curAt:d.versions[d.versions.length-1].at,
         prevHeadline:d.headline, changeNote:d.versions[d.versions.length-1].note,
         prevComments: d.comments.filter(c=>!c.general).map((c,i)=>({ n:i+1, bg:'var(--color-neutral-500)', text:c.text, chip: c.resolved?'Addressed':'Open', chipClass: c.resolved?'tag-accent':'tag-outline' })) }; }
@@ -1480,6 +1688,26 @@ class Component extends DCLogic {
       uploadVersion:()=>this.uploadVersion(), exportFile:()=>this.exportFile(),
       openSubmit:()=>this.openSubmit(), closeSubmit:()=>this.closeSubmit(), doSubmit:()=>this.doSubmit(),
       onSubBrand:(e)=>this.onSubBrand(e), onSubTitle:(e)=>this.onSubTitle(e), onSubPlatform:(e)=>this.onSubPlatform(e), onSubDate:(e)=>this.onSubDate(e), onSubCaption:(e)=>this.onSubCaption(e),
+      formatSingleClass: s.subFormat==='single'?'seg-opt on':'seg-opt',
+      formatCarouselClass: s.subFormat==='carousel'?'seg-opt on':'seg-opt',
+      setFormatSingle:()=>this.setState({subFormat:'single', subError:''}),
+      setFormatCarousel:()=>this.setFormatCarousel(),
+      platIgClass: s.subPlatforms.includes('Instagram')?'pchip on':'pchip',
+      platFbClass: s.subPlatforms.includes('Facebook')?'pchip on':'pchip',
+      platLiClass: s.subPlatforms.includes('LinkedIn')?'pchip on':'pchip',
+      toggleIg:()=>this.togglePlatform('Instagram'), toggleFb:()=>this.togglePlatform('Facebook'), toggleLi:()=>this.togglePlatform('LinkedIn'),
+      uploadHint: s.subFormat==='carousel'?'Add images for each carousel slide':'Drop an image or PDF, or click to browse',
+      isCarousel: s.subFormat==='carousel', isSingle: s.subFormat!=='carousel', hasSlides: s.subSlides.length>0,
+      subSlides: s.subSlides.map((sl,i)=>({id:sl.id, name:sl.name, caption:sl.caption||'', n:String(i+1), remove:()=>this.removeSlide(sl.id), onCaption:(e)=>this.onSlideCaption(sl.id, e)})),
+      addSlide:()=>this.addSlide(), onFiles:(e)=>this.onFiles(e),
+      toggleCaptionLater:()=>this.toggleCaptionLater(),
+      captionLaterLabel: s.subCaptionLater?'Add captions now':'Add captions later',
+      captionsNow: !s.subCaptionLater, captionsLater: !!s.subCaptionLater,
+      hasSubError: !!s.subError, subError: s.subError||'',
+      prevSlide:()=>this.prevSlide(), nextSlide:()=>this.nextSlide(),
+      openCaptions:()=>this.openCaptions(), saveCaptions:()=>this.saveCaptions(), cancelCaptions:()=>this.cancelCaptions(),
+      captionEditorOpen: !!s.captionDraft, captionEditorClosed: !s.captionDraft,
+      captionFields: (s.captionDraft?s.captionDraft.slides:[]).map(sl=>({name:sl.name, caption:sl.caption||'', onInput:(e)=>this.onCaptionDraft(sl.id, e)})),
       submitOpen:s.submitOpen, approveOpen:s.approveOpen, changesOpen:s.changesOpen, changesNote:s.changesNote,
       subBrand:s.subBrand, subTitle:s.subTitle, subPlatform:s.subPlatform, subDate:s.subDate, subCaption:s.subCaption,
       brandOptions:s.brands.map(b=>b.name),
