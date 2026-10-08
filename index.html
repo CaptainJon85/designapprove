@@ -982,11 +982,13 @@
               </div>
               <div style="min-width:0;flex:1">
                 <div style="font-size:14px"><span style="font-weight:500">{{ n.title }}</span> {{ n.body }}</div>
+                <sc-if value="{{ n.hasEmail }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:var(--color-neutral-700);margin-top:4px">{{ n.emailStatus }}</div></sc-if>
                 <div style="font-size:11px;color:var(--color-neutral-600);margin-top:2px">{{ n.brand }} · {{ n.at }}</div>
               </div>
               <sc-if value="{{ n.unread }}" hint-placeholder-val="{{ true }}"><span style="width:8px;height:8px;flex:none;margin-top:6px;background:var(--color-accent);border-radius:50%"></span></sc-if>
             </div>
           </sc-for>
+          <sc-if value="{{ notifEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:var(--space-6);text-align:center;color:var(--color-neutral-600);font-size:14px">No notifications yet.</div></sc-if>
         </div>
       </div>
     </sc-if>
@@ -1368,6 +1370,10 @@ class Component extends DCLogic {
       {id:'u3', name:'Priya Nair',   email:'priya@studio.co', roles:{nw:'—',        vg:'Designer', lm:'Viewer',   mb:'—'}},
       {id:'u4', name:'Lena Fischer', email:'lena@studio.co',  roles:{nw:'—',        vg:'—',        lm:'Designer', mb:'—'}},
       {id:'u5', name:'Grace Kim',    email:'grace@studio.co', roles:{nw:'Viewer',   vg:'—',        lm:'—',        mb:'Reviewer'}},
+      {id:'u6', name:'Devin Cole',   email:'devin@studio.co', roles:{nw:'Designer', vg:'—',        lm:'—',        mb:'—'}},
+      {id:'u7', name:'Marco Lind',   email:'marco@studio.co', roles:{nw:'—',        vg:'Designer', lm:'—',        mb:'—'}},
+      {id:'u8', name:'Omar Reyes',   email:'omar@studio.co',  roles:{nw:'—',        vg:'—',        lm:'Designer', mb:'—'}},
+      {id:'u9', name:'Tomas Alvarez',email:'tomas@studio.co', roles:{nw:'—',        vg:'—',        lm:'—',        mb:'Designer'}},
     ];
 
     const notes = [
@@ -1378,6 +1384,7 @@ class Component extends DCLogic {
       {id:'n5', type:'aging', title:'Reminder', body:'“Loyalty perks carousel” has waited 3 days with the designer.', brand:'Northwind Coffee', at:'1 day ago', unread:false, designId:'d3', icon:'!'},
       {id:'n6', type:'sched', title:'Grace Kim', body:'scheduled “Q3 mortgage explainer” for 14 Jul.', brand:'Meridian Bank', at:'4 days ago', unread:false, designId:'d12', icon:'◷'},
     ];
+    notes.forEach(n=>{ n.audience='approver'; });
 
     this.state = {
       view:'dashboard', brandId:null, designId:null, prevView:'dashboard',
@@ -1460,7 +1467,45 @@ class Component extends DCLogic {
   planApprove(){ const p=this.state.plans.find(x=>x.id===this.state.planId); p.status='Approved'; p.approvedBy='You · just now'; this.notify('You','approved the '+p.month+' content calendar — '+p.by+' notified.', this.brand(p.brandId).name, '✓', null); this.flash('Content plan approved'); }
   planChanges(){ const p=this.state.plans.find(x=>x.id===this.state.planId); p.status='Changes Requested'; this.notify('You','requested changes on the '+p.month+' content calendar — '+p.by+' notified.', this.brand(p.brandId).name, '✎', null); this.flash('Plan sent back to '+p.by); }
 
-  notify(title, body, brandName, icon, designId){ this.state.notes.unshift({id:'n'+Date.now()+Math.random(), title, body, brand:brandName, at:'just now', unread:true, designId, icon}); this.bump(); }
+  notify(title, body, brandName, icon, designId){ this.state.notes.unshift({id:'n'+Date.now()+Math.random(), title, body, brand:brandName, at:'just now', unread:true, designId, icon, audience:'approver'}); this.bump(); }
+  currentUser(){ return this.state.users.find(u=>u.id===this.state.sessionId)||null; }
+  designerOf(d){
+    if(!d) return null;
+    if(d.submitterId) return this.state.users.find(u=>u.id===d.submitterId)||null;
+    return this.state.users.find(u=>u.name===(d.submitter||'').trim())||null;
+  }
+  visibleNotes(){
+    const me=this.currentUser();
+    if(!me) return [];
+    const approver=Object.values(me.roles||{}).some(r=>r==='Admin'||r==='Reviewer');
+    return this.state.notes.filter(n=>{
+      if(n.forId) return n.forId===me.id;
+      if(n.audience==='approver') return approver;
+      return true;
+    });
+  }
+  notifyDesigner(d, commentText){
+    const me=this.currentUser();
+    if(!me||!d) return false;
+    const role=(me.roles||{})[d.brandId];
+    if(!['Admin','Reviewer','Viewer'].includes(role)) return false;
+    const designer=this.designerOf(d);
+    if(!designer||designer.id===me.id) return false;
+    const brand=this.brand(d.brandId);
+    const roleLabel=role==='Reviewer'?'Approver':role;
+    const quote=commentText.trim();
+    const note={id:'n'+Date.now()+Math.random(), type:'comment', title:me.name, body:'commented on “'+d.title+'”: “'+quote+'”.', brand:brand.name, at:'just now', unread:true, designId:d.id, icon:'✉', forId:designer.id, emailTo:designer.email, emailStatus:'Sending email to '+designer.email+'…'};
+    this.state.notes.unshift(note);
+    this.bump();
+    const subject='Comment on “'+d.title+'”';
+    const text=me.name+' ('+roleLabel+') commented on “'+d.title+'” for '+brand.name+'.\n\n'+quote+'\n\nOpen Proofline to see the pin on the design.';
+    fetch('./api/notify', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({to:designer.email, subject, text})})
+      .then(r=>r.json())
+      .then(res=>{ note.emailStatus=(res&&res.sent)?'Emailed '+designer.email:'Email queued for '+designer.email; this.bump(); })
+      .catch(()=>{ note.emailStatus='Email queued for '+designer.email; this.bump(); });
+    this.flash(designer.name+' notified in Proofline and at '+designer.email);
+    return true;
+  }
 
   // date picker
   togglePicker(){ this.setState(s=>({pickerOpen:!s.pickerOpen})); }
@@ -1475,10 +1520,10 @@ class Component extends DCLogic {
   togglePinMode(){ this.setState(s=>({pinMode:!s.pinMode, draft: s.pinMode?null:s.draft})); }
   artClick(e){ if(!this.state.pinMode) return; if(e.target&&e.target.closest&&e.target.closest('.pin')) return; const point=(e.changedTouches&&e.changedTouches[0])||e; const r=e.currentTarget.getBoundingClientRect(); const left=((point.clientX-r.left)/r.width*100).toFixed(1)+'%'; const top=((point.clientY-r.top)/r.height*100).toFixed(1)+'%'; this.setState({draft:{left,top}, panel:'comments', commentText:'', sheetOpen:true}); }
   onCommentInput(e){ this.setState({commentText:e.target.value}); }
-  savePin(){ const d=this.design(this.state.designId); if(!this.state.draft||!this.state.commentText.trim()) return; const v=d.versions[d.versions.length-1].n; d.comments.push({id:'c'+Date.now(), left:this.state.draft.left, top:this.state.draft.top, text:this.state.commentText.trim(), author:'You', at:'just now', resolved:false, version:v}); d.history.push({type:'comment', actor:'You', text:'pinned a comment', at:'just now', dot:'var(--color-accent-2)'}); this.setState({draft:null, commentText:'', pinMode:false, sheetOpen:true}); this.flash('Comment pinned'); }
+  savePin(){ const d=this.design(this.state.designId); if(!this.state.draft||!this.state.commentText.trim()) return; const v=d.versions[d.versions.length-1].n; const text=this.state.commentText.trim(); const who=(this.currentUser()||{}).name||'You'; d.comments.push({id:'c'+Date.now(), left:this.state.draft.left, top:this.state.draft.top, text, author:who, at:'just now', resolved:false, version:v}); d.history.push({type:'comment', actor:who, text:'pinned a comment', at:'just now', dot:'var(--color-accent-2)'}); const sent=this.notifyDesigner(d, text); this.setState({draft:null, commentText:'', pinMode:false, sheetOpen:true}); if(!sent) this.flash('Comment pinned'); }
   cancelPin(){ this.setState({draft:null, commentText:''}); }
   onGeneralInput(e){ this.setState({generalText:e.target.value}); }
-  addGeneral(){ const d=this.design(this.state.designId); if(!this.state.generalText.trim()) return; const v=d.versions[d.versions.length-1].n; d.comments.push({id:'g'+Date.now(), text:this.state.generalText.trim(), author:'You', at:'just now', resolved:false, version:v, general:true}); this.setState({generalText:''}); this.flash('Comment added'); }
+  addGeneral(){ const d=this.design(this.state.designId); if(!this.state.generalText.trim()) return; const v=d.versions[d.versions.length-1].n; const text=this.state.generalText.trim(); const who=(this.currentUser()||{}).name||'You'; d.comments.push({id:'g'+Date.now(), text, author:who, at:'just now', resolved:false, version:v, general:true}); const sent=this.notifyDesigner(d, text); this.setState({generalText:''}); if(!sent) this.flash('Comment added'); }
   toggleComment(cid){ const d=this.design(this.state.designId); const c=d.comments.find(x=>x.id===cid); c.resolved=!c.resolved; this.bump(); }
   focusPin(){ this.setState({panel:'comments', sheetOpen:true}); }
 
@@ -1495,8 +1540,8 @@ class Component extends DCLogic {
   openChanges(){ this.setState({changesOpen:true, changesNote:''}); }
   closeDecisionOld(){ this.setState({approveOpen:false, changesOpen:false}); }
   onChangesNote(e){ this.setState({changesNote:e.target.value}); }
-  confirmApprove(){ const d=this.design(this.state.designId); d.state='Approved'; d.locked=true; d.approvedBy='You · just now'; d.approvedAt='just now'; d.history.push({type:'approve', actor:'You', text:'approved — safe to post', at:'just now', dot:'var(--color-accent)'}); this.state.notes.unshift({id:'n'+Date.now(), type:'approve', title:'You', body:'approved “'+d.title+'” — '+d.submitter+' notified.', brand:this.brand(d.brandId).name, at:'just now', unread:false, designId:d.id, icon:'✓'}); this.setState({approveOpen:false}); this.flash('Approved & locked'); }
-  confirmChanges(){ const d=this.design(this.state.designId); if(!this.state.changesNote.trim()) return; d.state='Changes Requested'; d.history.push({type:'changes', actor:'You', text:'requested changes: “'+this.state.changesNote.trim()+'”', at:'just now', dot:'var(--color-neutral-700)'}); this.state.notes.unshift({id:'n'+Date.now(), type:'changes', title:'You', body:'requested changes on “'+d.title+'” — '+d.submitter+' notified.', brand:this.brand(d.brandId).name, at:'just now', unread:false, designId:d.id, icon:'✎'}); this.setState({changesOpen:false, changesNote:''}); this.flash('Sent back to designer'); }
+  confirmApprove(){ const d=this.design(this.state.designId); d.state='Approved'; d.locked=true; d.approvedBy='You · just now'; d.approvedAt='just now'; d.history.push({type:'approve', actor:'You', text:'approved — safe to post', at:'just now', dot:'var(--color-accent)'}); this.state.notes.unshift({id:'n'+Date.now(), type:'approve', title:'You', body:'approved “'+d.title+'” — '+d.submitter+' notified.', brand:this.brand(d.brandId).name, at:'just now', unread:false, designId:d.id, icon:'✓', audience:'approver'}); this.setState({approveOpen:false}); this.flash('Approved & locked'); }
+  confirmChanges(){ const d=this.design(this.state.designId); if(!this.state.changesNote.trim()) return; d.state='Changes Requested'; d.history.push({type:'changes', actor:'You', text:'requested changes: “'+this.state.changesNote.trim()+'”', at:'just now', dot:'var(--color-neutral-700)'}); this.state.notes.unshift({id:'n'+Date.now(), type:'changes', title:'You', body:'requested changes on “'+d.title+'” — '+d.submitter+' notified.', brand:this.brand(d.brandId).name, at:'just now', unread:false, designId:d.id, icon:'✎', audience:'approver'}); this.setState({changesOpen:false, changesNote:''}); this.flash('Sent back to designer'); }
   uploadVersion(){ const d=this.design(this.state.designId); const n=d.versions.length+1; d.versions.push({n, by:d.submitter, at:'just now', note:'Revised — addressed open feedback'}); d.comments.forEach(c=>{ if(c.version===n-1) c.resolved=true; }); d.state='Resubmitted'; d.history.push({type:'resubmit', actor:d.submitter, text:'uploaded v'+n, at:'just now', dot:'var(--color-accent)'}); this.setState({panel:'versions'}); this.flash('New version uploaded'); }
   exportFile(){ this.flash('Export queued — file downloading'); }
   scheduleDesign(id){ const d=this.design(id); d.state='Scheduled/Posted'; d.history.push({type:'sched', actor:'You', text:'marked scheduled', at:'just now', dot:'var(--color-neutral-600)'}); this.bump(); this.flash('Marked as scheduled'); }
@@ -1564,11 +1609,11 @@ class Component extends DCLogic {
     const caption=slides.map(sl=>sl.caption).filter(Boolean).join('\n\n');
     const d={ id:'d'+Date.now(), brandId:b.id, title:t, kicker:'New', headline:t.split(' ').slice(0,3).join(' ')||'New post', sub:'', cta:'Learn more',
       platform:platforms.join(' · '), platforms, format, slides, captionLater: this.state.subCaptionLater || slides.some(sl=>!sl.caption),
-      aspect: onlyLi?'1200 / 628':'1 / 1', campaign:'—', submitter:'You', state:'Submitted', age:0, postD: parseInt(this.state.subDate)||null,
+      aspect: onlyLi?'1200 / 628':'1 / 1', campaign:'—', submitter:(this.currentUser()||{}).name||'You', submitterId:this.state.sessionId, state:'Submitted', age:0, postD: parseInt(this.state.subDate)||null,
       caption, locked:false, comments:[], versions:[{n:1, by:'You', at:'just now', note:'Initial submission'}],
       history:[{type:'submit', actor:'You', text:'submitted the design', at:'just now', dot:'var(--color-accent)'}] };
     this.state.designs.unshift(d);
-    this.state.notes.unshift({id:'n'+Date.now(), type:'submit', title:'You', body:'submitted “'+t+'”.', brand:b.name, at:'just now', unread:false, designId:d.id, icon:'↑'});
+    this.state.notes.unshift({id:'n'+Date.now(), type:'submit', title:'You', body:'submitted “'+t+'”.', brand:b.name, at:'just now', unread:false, designId:d.id, icon:'↑', audience:'approver'});
     this.setState({submitOpen:false, brandId:b.id, view:'queue', filter:'all', designId:d.id});
     this.flash(d.captionLater ? 'Submitted — captions can be added later' : 'Submitted for review');
   }
@@ -1669,7 +1714,7 @@ class Component extends DCLogic {
 
   // notifications
   openNote(n){ n.unread=false; if(n.designId) this.openDesign(n.designId); else this.bump(); }
-  markAllRead(){ this.state.notes.forEach(n=>n.unread=false); this.bump(); }
+  markAllRead(){ this.visibleNotes().forEach(n=>{ n.unread=false; }); this.bump(); }
 
   stop(e){ e.stopPropagation(); }
 
@@ -1804,10 +1849,12 @@ class Component extends DCLogic {
       '✕':'M18 6 6 18M6 6l12 12',
       '⌗':'M3 4h18v18H3zM16 2v4M8 2v4M3 10h18',
       '◷':'M12 6v6l4 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
-      '!':'M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z'
+      '!':'M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z',
+      '✉':'M4 6h16v12H4zM4 6l8 7 8-7'
     };
-    const notifList = s.notes.map(n=>({ id:n.id, title:n.title, body:n.body, brand:n.brand, at:n.at, iconPath: ICON_PATH[n.icon]||ICON_PATH['↑'], unread:n.unread, bg: n.unread?'color-mix(in srgb,var(--color-accent) 5%,transparent)':'transparent', open:()=>this.openNote(n) }));
-    const unreadCount = s.notes.filter(n=>n.unread).length;
+    const myNotes = this.visibleNotes();
+    const notifList = myNotes.map(n=>({ id:n.id, title:n.title, body:n.body, brand:n.brand, at:n.at, iconPath: ICON_PATH[n.icon]||ICON_PATH['↑'], unread:n.unread, hasEmail:!!n.emailTo, emailStatus:n.emailStatus||'', bg: n.unread?'color-mix(in srgb,var(--color-accent) 5%,transparent)':'transparent', open:()=>this.openNote(n) }));
+    const unreadCount = myNotes.filter(n=>n.unread).length;
 
     // admin
     const adminBrands = s.brands.map(b=>({ name:b.name, tile:b.tile, shade:b.shade,
@@ -1946,7 +1993,7 @@ class Component extends DCLogic {
       subDateLabel: s.subDay? (s.subDay+' '+pm.abbr+' 2026') : 'Pick a date',
       subDateColor: s.subDay? 'var(--color-text)' : 'var(--color-neutral-600)',
       openReject:()=>this.openReject(), confirmReject:()=>this.confirmReject(), rejectOpen:s.rejectOpen,
-      notifList, notifSummary: unreadCount+' unread · '+s.notes.length+' total', markAllRead:()=>this.markAllRead(),
+      notifList, notifEmpty:notifList.length===0, notifSummary: unreadCount+' unread · '+myNotes.length+' for you', markAllRead:()=>this.markAllRead(),
       adminBrands, brandHeads, userRows, createBrand:()=>this.createBrand(),
       // handlers
       goDashboard:()=>this.goDashboard(), goNotifications:()=>this.goNotifications(), goAdmin:()=>this.goAdmin(),
