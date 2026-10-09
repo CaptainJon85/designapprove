@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
   }
 
   const key = process.env.RESEND_API_KEY;
-  if (!key) return res.status(200).json({ sent: false, queued: true });
+  if (!key) return res.status(200).json({ sent: false, queued: true, reason: 'missing_key' });
 
   const from = process.env.NOTIFY_FROM || 'Proofline <notifications@proofline.ojsolutions.io>';
   try {
