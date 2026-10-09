@@ -127,8 +127,12 @@
   @keyframes pindrop{from{opacity:0;transform:translate(-50%,-50%) scale(.6)}to{opacity:1}}
   .pin{animation:pindrop .22s ease-out;border-radius:50%;box-shadow:0 4px 10px rgba(0,0,0,.18)}
 
-  .login{min-height:100vh;display:grid;place-items:center;padding:32px 20px;background:linear-gradient(165deg,#EDEDEF 0%,#DFE2EA 50%,#CDD5E6 100%)}
-  .login-card{width:min(440px,100%);background:var(--paper);border-radius:32px;box-shadow:0 1px 0 #fff inset,var(--shadow-lg);padding:36px 32px 28px}
+  .login{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 20px 18px;background:linear-gradient(165deg,#EDEDEF 0%,#DFE2EA 50%,#CDD5E6 100%)}
+  .login-card{width:min(440px,100%);margin:auto;background:var(--paper);border-radius:32px;box-shadow:0 1px 0 #fff inset,var(--shadow-lg);padding:36px 32px 28px}
+  .site-footer{margin:0;text-align:center;font-size:12px;line-height:1.5;color:#5C6270}
+  .site-footer a{color:#1C3B5E;font-weight:500;text-decoration:none}
+  .site-footer a:hover{text-decoration:underline}
+  .app-footer{flex:none;padding:2px 24px 14px 8px}
   .invite{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--surface-2);border:0;border-radius:18px;padding:10px 12px;cursor:pointer;font:inherit;color:var(--ink)}
   .invite:hover{background:#fff;box-shadow:var(--shadow-sm)}
 
@@ -137,7 +141,8 @@
   .sheet-grab{width:36px;height:4px;border-radius:99px;background:#C9CED6}
 
   @media (max-width:860px){
-    .login{padding:20px 14px calc(20px + env(safe-area-inset-bottom));align-items:start}
+    .login{padding:20px 14px calc(16px + env(safe-area-inset-bottom));align-items:stretch}
+    .app-footer{padding:8px 14px 10px;text-align:center}
     .login-card{padding:28px 18px 20px;border-radius:28px}
     .login-card h3{font-size:28px !important}
     .app{height:100dvh !important;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
@@ -190,6 +195,7 @@
       <div style="font-family:var(--font-heading);font-weight:500;font-size:22px;letter-spacing:-.02em">Proofline</div>
       <p style="margin:14px 0 0;font-size:14px;color:var(--color-neutral-600)">Loading workspace…</p>
     </div>
+    <p class="site-footer">Proofline is a product of OJ Solutions Global. <a href="https://www.ojsolutions.io" target="_blank" rel="noopener noreferrer">www.ojsolutions.io</a> for more information.</p>
   </div>
 </sc-if>
 
@@ -220,6 +226,7 @@
       </sc-if>
       <button class="btn btn-primary" type="submit" style="width:100%;margin-top:18px">Continue</button>
     </form>
+    <p class="site-footer">Proofline is a product of OJ Solutions Global. <a href="https://www.ojsolutions.io" target="_blank" rel="noopener noreferrer">www.ojsolutions.io</a> for more information.</p>
   </div>
 </sc-if>
 
@@ -250,6 +257,7 @@
       </sc-if>
       <button class="btn btn-primary" type="submit" style="width:100%;margin-top:18px">Save and continue</button>
     </form>
+    <p class="site-footer">Proofline is a product of OJ Solutions Global. <a href="https://www.ojsolutions.io" target="_blank" rel="noopener noreferrer">www.ojsolutions.io</a> for more information.</p>
   </div>
 </sc-if>
 
@@ -340,7 +348,7 @@
       </div>
     </header>
 
-    <div class="stage" style="flex:1;overflow-y:auto;margin:0 16px 16px 0;border-radius:36px;background:rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.7)">
+    <div class="stage" style="flex:1;overflow-y:auto;margin:0 16px 8px 0;border-radius:36px;background:rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.7)">
 
     <!-- ═══════════ DASHBOARD ═══════════ -->
     <sc-if value="{{ nav.isDashboard }}" hint-placeholder-val="{{ true }}">
@@ -1112,6 +1120,7 @@
     </sc-if>
 
     </div>
+    <p class="site-footer app-footer">Proofline is a product of OJ Solutions Global. <a href="https://www.ojsolutions.io" target="_blank" rel="noopener noreferrer">www.ojsolutions.io</a> for more information.</p>
   </main>
 
   <!-- ══ SUBMIT MODAL ══ -->
