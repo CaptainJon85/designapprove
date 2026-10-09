@@ -26,7 +26,7 @@ async function loadWorkspace(){
     query('SELECT id, name, email, kind, master, must_change_password, password_salt, password_hash FROM users ORDER BY position'),
     query(`SELECT id, name, tile, shade, on_shade AS "onShade", mute,
               profile_url AS "profileUrl", profile_label AS "profileLabel",
-              profile_handle AS "profileHandle", guide
+              profile_handle AS "profileHandle", guide, status
            FROM brands ORDER BY position`),
     query('SELECT user_id, brand_id, role FROM roles'),
     query('SELECT body FROM designs ORDER BY position'),
@@ -60,6 +60,7 @@ async function loadWorkspace(){
       profileUrl: row.profileUrl,
       profileLabel: row.profileLabel,
       profileHandle: row.profileHandle,
+      status: row.status === 'hold' ? 'hold' : 'active',
       guide: row.guide || {}
     })),
     designs: designs.rows.map(row => row.body),
@@ -97,12 +98,12 @@ async function saveWorkspace(ws){
       const brand = workspace.brands[i];
       if (!brand || !brand.id) continue;
       await client.query(
-        `INSERT INTO brands (id, position, name, tile, shade, on_shade, mute, profile_url, profile_label, profile_handle, guide)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb)`,
+        `INSERT INTO brands (id, position, name, tile, shade, on_shade, mute, profile_url, profile_label, profile_handle, guide, status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12)`,
         [
           brand.id, i, String(brand.name || '').slice(0, 80), brand.tile || '', brand.shade || '#B9DEFF',
           brand.onShade || '#10141A', brand.mute || '#1F3152', brand.profileUrl || '', brand.profileLabel || '',
-          brand.profileHandle || '', JSON.stringify(brand.guide || {})
+          brand.profileHandle || '', JSON.stringify(brand.guide || {}), brand.status === 'hold' ? 'hold' : 'active'
         ]
       );
     }

@@ -300,6 +300,7 @@
         <sc-if value="{{ b.hasLogo }}" hint-placeholder-val="{{ false }}"><img src="{{ b.logoUrl }}" alt="" style="width:22px;height:22px;flex:none;border-radius:50%;object-fit:cover"></sc-if>
         <sc-if value="{{ b.noLogo }}" hint-placeholder-val="{{ true }}"><span style="width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;font-family:var(--font-heading);font-size:11px;color:#10141A;background: {{ b.shade }}">{{ b.tile }}</span></sc-if>
         {{ b.name }}
+        <sc-if value="{{ b.onHold }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto;font-size:11px;color:var(--color-neutral-600)">Hold</span></sc-if>
         <sc-if value="{{ b.hasAwaiting }}" hint-placeholder-val="{{ true }}"><span style="margin-left:auto;font-size:11px;color:var(--color-accent-700);font-weight:500">{{ b.awaiting }}</span></sc-if>
       </button>
       <sc-if value="{{ b.active }}" hint-placeholder-val="{{ false }}">
@@ -351,6 +352,9 @@
     </header>
 
     <div class="stage" style="flex:1;overflow-y:auto;margin:0 16px 8px 0;border-radius:36px;background:rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.7)">
+    <sc-if value="{{ brandOnHold }}" hint-placeholder-val="{{ false }}">
+      <div style="margin:var(--space-4) var(--space-6) 0;padding:12px 14px;border-radius:16px;background:#F4F1EA;color:#3A3428;font-size:13px">{{ holdBrandName }} is on hold. Campaigns are paused and new designs cannot be uploaded.</div>
+    </sc-if>
 
     <!-- ═══════════ DASHBOARD ═══════════ -->
     <sc-if value="{{ nav.isDashboard }}" hint-placeholder-val="{{ true }}">
@@ -414,6 +418,7 @@
                     <sc-if value="{{ b.hasLogo }}" hint-placeholder-val="{{ false }}"><img src="{{ b.logoUrl }}" alt="" style="width:30px;height:30px;flex:none;border-radius:50%;object-fit:cover"></sc-if>
                     <sc-if value="{{ b.noLogo }}" hint-placeholder-val="{{ true }}"><span style="width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;font-family:var(--font-heading);font-size:12px;color:#10141A;background: {{ b.shade }}">{{ b.tile }}</span></sc-if>
                     <div style="font-family:var(--font-heading);font-weight:600;font-size:16px">{{ b.name }}</div>
+                    <sc-if value="{{ b.onHold }}" hint-placeholder-val="{{ false }}"><span class="tag tag-neutral">On hold</span></sc-if>
                     <span style="margin-left:auto;font-size:12px;color:var(--color-neutral-600)">{{ b.total }} live</span>
                   </div>
                   <div style="display:flex;gap:var(--space-4);margin-top:10px;font-size:12px">
@@ -949,10 +954,12 @@
       <div style="padding:var(--space-6);max-width:1000px">
         <div style="display:flex;align-items:flex-start;gap:var(--space-4);margin-bottom:var(--space-4)">
           <p style="font-size:13px;color:var(--color-neutral-600);max-width:560px;margin:0">Review the whole month before a single asset is designed. Upload or build a monthly content calendar, send it for sign-off, then track which planned slots already have artwork approved.</p>
+          <sc-if value="{{ canUploadPlan }}" hint-placeholder-val="{{ true }}">
           <button class="btn btn-primary" style="margin-left:auto;flex:none" onClick="{{ uploadPlan }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:15px;height:15px;stroke-width:1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
             Upload monthly plan
           </button>
+          </sc-if>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-4)">
           <sc-for list="{{ planList }}" as="p" hint-placeholder-count="2">
@@ -1052,7 +1059,7 @@
           </div>
           <div class="blueprint" style="padding:0">
             <table class="table">
-              <thead><tr><th>Brand</th><th>Members</th><th>Approvers</th><th>Live designs</th><th>Guidelines</th></tr></thead>
+              <thead><tr><th>Brand</th><th>Members</th><th>Approvers</th><th>Live designs</th><th>Status</th></tr></thead>
               <tbody>
                 <sc-for list="{{ adminBrands }}" as="b" hint-placeholder-count="4">
                   <tr>
@@ -1060,7 +1067,7 @@
                     <td>{{ b.members }}</td>
                     <td>{{ b.approvers }}</td>
                     <td>{{ b.total }}</td>
-                    <td><span class="tag tag-accent">Current</span></td>
+                    <td><select class="input" style="min-height:36px;font-size:13px;width:120px" value="{{ b.statusLabel }}" onChange="{{ b.onStatus }}"><option>Active</option><option>Hold</option></select></td>
                   </tr>
                 </sc-for>
               </tbody>
@@ -1468,6 +1475,15 @@ class Component extends DCLogic {
     const me=this.currentUser();
     return this.state.brands.filter(b=>this.canSeeBrand(me, b.id));
   }
+  isHeld(brand){ return !!(brand && brand.status==='hold'); }
+  activeBrands(){ return this.visibleBrands().filter(b=>!this.isHeld(b)); }
+  setBrandStatus(id, value){
+    const b=this.brand(id);
+    if(!b) return;
+    b.status = value==='Hold' ? 'hold' : 'active';
+    this.bump();
+    this.flash(b.status==='hold' ? b.name+' is on hold. Campaigns and new designs are paused.' : b.name+' is active again.');
+  }
   guardBrand(id){ return this.canSeeBrand(this.currentUser(), id); }
   onLoginEmail(e){ this.setState({loginEmail:e.target.value, loginError:''}); }
   onLoginPassword(e){ this.setState({loginPassword:e.target.value, loginError:''}); }
@@ -1514,7 +1530,7 @@ class Component extends DCLogic {
   goPlans(id){ if(!this.guardBrand(id)) return; this.setState({brandId:id, view:'plans', menuOpen:false}); }
   openPlan(id){ const p=this.state.plans.find(x=>x.id===id); if(!p||!this.guardBrand(p.brandId)) return; this.setState({view:'planDetail', planId:id, brandId:p.brandId}); }
   backToPlans(){ this.setState({view:'plans'}); }
-  uploadPlan(){ this.flash('Plan uploaded — sent for review'); const b=this.brand(this.state.brandId); const p={id:'p'+Date.now(), brandId:this.state.brandId, month:'August 2026', status:'In Review', by:'You', at:'just now', rows:[{d:3, concept:'Untitled slot', platform:'Instagram — Post', campaign:'—', art:'Not started'}]}; this.state.plans.push(p); this.notify('You','submitted the August 2026 content calendar for review.', b.name, '⌗', null); }
+  uploadPlan(){ const b=this.brand(this.state.brandId); if(!b) return; if(this.isHeld(b)){ this.flash(b.name+' is on hold. Campaigns are paused.'); return; } this.flash('Plan uploaded — sent for review'); const p={id:'p'+Date.now(), brandId:this.state.brandId, month:'August 2026', status:'In Review', by:'You', at:'just now', rows:[{d:3, concept:'Untitled slot', platform:'Instagram — Post', campaign:'—', art:'Not started'}]}; this.state.plans.push(p); this.notify('You','submitted the August 2026 content calendar for review.', b.name, '⌗', null); }
   planApprove(){ const p=this.state.plans.find(x=>x.id===this.state.planId); p.status='Approved'; p.approvedBy='You · just now'; this.notify('You','approved the '+p.month+' content calendar — '+p.by+' notified.', this.brand(p.brandId).name, '✓', null); this.flash('Content plan approved'); }
   planChanges(){ const p=this.state.plans.find(x=>x.id===this.state.planId); p.status='Changes Requested'; this.notify('You','requested changes on the '+p.month+' content calendar — '+p.by+' notified.', this.brand(p.brandId).name, '✎', null); this.flash('Plan sent back to '+p.by); }
 
@@ -1595,7 +1611,7 @@ class Component extends DCLogic {
   onChangesNote(e){ this.setState({changesNote:e.target.value}); }
   confirmApprove(){ const d=this.design(this.state.designId); d.state='Approved'; d.locked=true; d.approvedBy='You · just now'; d.approvedAt='just now'; d.history.push({type:'approve', actor:'You', text:'approved — safe to post', at:'just now', dot:'var(--color-accent)'}); this.state.notes.unshift({id:'n'+Date.now(), type:'approve', title:'You', body:'approved “'+d.title+'” — '+d.submitter+' notified.', brand:this.brand(d.brandId).name, at:'just now', unread:false, designId:d.id, icon:'✓', audience:'approver'}); this.setState({approveOpen:false}); this.flash('Approved & locked'); }
   confirmChanges(){ const d=this.design(this.state.designId); if(!this.state.changesNote.trim()) return; d.state='Changes Requested'; d.history.push({type:'changes', actor:'You', text:'requested changes: “'+this.state.changesNote.trim()+'”', at:'just now', dot:'var(--color-neutral-700)'}); this.state.notes.unshift({id:'n'+Date.now(), type:'changes', title:'You', body:'requested changes on “'+d.title+'” — '+d.submitter+' notified.', brand:this.brand(d.brandId).name, at:'just now', unread:false, designId:d.id, icon:'✎', audience:'approver'}); this.setState({changesOpen:false, changesNote:''}); this.flash('Sent back to designer'); }
-  uploadVersion(){ const d=this.design(this.state.designId); const n=d.versions.length+1; d.versions.push({n, by:d.submitter, at:'just now', note:'Revised — addressed open feedback'}); d.comments.forEach(c=>{ if(c.version===n-1) c.resolved=true; }); d.state='Resubmitted'; d.history.push({type:'resubmit', actor:d.submitter, text:'uploaded v'+n, at:'just now', dot:'var(--color-accent)'}); this.setState({panel:'versions'}); this.flash('New version uploaded'); }
+  uploadVersion(){ const d=this.design(this.state.designId); const b=d&&this.brand(d.brandId); if(this.isHeld(b)){ this.flash(b.name+' is on hold. New designs cannot be uploaded.'); return; } const n=d.versions.length+1; d.versions.push({n, by:d.submitter, at:'just now', note:'Revised — addressed open feedback'}); d.comments.forEach(c=>{ if(c.version===n-1) c.resolved=true; }); d.state='Resubmitted'; d.history.push({type:'resubmit', actor:d.submitter, text:'uploaded v'+n, at:'just now', dot:'var(--color-accent)'}); this.setState({panel:'versions'}); this.flash('New version uploaded'); }
   exportFile(){ this.flash('Export queued — file downloading'); }
   scheduleDesign(id){ const d=this.design(id); d.state='Scheduled/Posted'; d.history.push({type:'sched', actor:'You', text:'marked scheduled', at:'just now', dot:'var(--color-neutral-600)'}); this.bump(); this.flash('Marked as scheduled'); }
 
@@ -1620,7 +1636,8 @@ class Component extends DCLogic {
 
   // submit modal
   openSubmit(){
-    const brands=this.visibleBrands();
+    const brands=this.activeBrands();
+    if(!brands.length){ this.flash('Every brand is on hold. Set one to Active before uploading a design.'); return; }
     const current=brands.find(b=>b.id===this.state.brandId);
     this.setState({submitOpen:true, subBrand:current?current.name:(brands[0]?brands[0].name:''), subTitle:'', subCaption:'', subDate:'', subDay:null, pickerOpen:false, pickerMonth:6, subFormat:'single', subPlatforms:['Instagram'], subSlides:[], subCaptionLater:false, subError:''});
   }
@@ -1660,9 +1677,10 @@ class Component extends DCLogic {
     }
     if(!platforms.length){ this.setState({subError:'Choose at least one platform.'}); return; }
     if(format==='carousel' && slides.length<2){ this.setState({subError:'A carousel needs at least two slides.'}); return; }
-    const allowed=this.visibleBrands();
+    const allowed=this.activeBrands();
     const b=allowed.find(x=>x.name===this.state.subBrand)||allowed[0];
-    if(!b){ this.setState({subError:'No brand is shared with you.'}); return; }
+    if(!b){ this.setState({subError:'No active brand is available. A brand on hold cannot take new designs.'}); return; }
+    if(this.isHeld(b)){ this.setState({subError:b.name+' is on hold.'}); return; }
     const t=this.state.subTitle.trim()||'Untitled submission';
     const onlyLi=platforms.length===1 && platforms[0]==='LinkedIn';
     const caption=slides.map(sl=>sl.caption).filter(Boolean).join('\n\n');
@@ -1886,7 +1904,7 @@ class Component extends DCLogic {
     const id='b'+Date.now();
     this.state.brands.push({
       id, name:resolvedName, tile:this.tileFor(resolvedName), shade:shades[this.state.brands.length%shades.length], onShade:'#10141A', mute:'#1F3152',
-      profileUrl, profileLabel, profileHandle,
+      profileUrl, profileLabel, profileHandle, status:'active',
       guide:{logoName, logoUrl, colors:[], displayFont:'Urbanist', bodyFont:'Urbanist', dos:[], donts:[]}
     });
     this.state.users.forEach(u=>{ u.roles[id]=u.master?'Admin':'—'; });
@@ -1985,7 +2003,7 @@ class Component extends DCLogic {
       const awaiting=this.countFor(b.id, this.awaitingStates());
       const active = safeBrandId===b.id;
       const logo=(b.guide&&b.guide.logoUrl)||'';
-      return { id:b.id, name:b.name, tile:b.tile, shade:b.shade, logoUrl:logo, hasLogo:!!logo, noLogo:!logo, awaiting, hasAwaiting:awaiting>0,
+      return { id:b.id, name:b.name, tile:b.tile, shade:b.shade, logoUrl:logo, hasLogo:!!logo, noLogo:!logo, onHold:b.status==='hold', awaiting, hasAwaiting:awaiting>0,
         on: (active && ['queue','approved','calendar','guidelines','review','compare','plans','planDetail','feed'].includes(view))?'on':'',
         active,
         f: (active&&view==='feed')?'on':'',
@@ -2006,7 +2024,7 @@ class Component extends DCLogic {
       platShort: this.platShort(d),
       shade:b.shade, onShade:b.onShade, thumbWord:d.headline, open:()=>this.openDesign(d.id) }; });
 
-    const brandCards = visibleBrands.map(b=>{ const logo=(b.guide&&b.guide.logoUrl)||''; return { id:b.id, name:b.name, tile:b.tile, shade:b.shade, logoUrl:logo, hasLogo:!!logo, noLogo:!logo,
+    const brandCards = visibleBrands.map(b=>{ const logo=(b.guide&&b.guide.logoUrl)||''; return { id:b.id, name:b.name, tile:b.tile, shade:b.shade, logoUrl:logo, hasLogo:!!logo, noLogo:!logo, onHold:b.status==='hold',
       total: s.designs.filter(d=>d.brandId===b.id && !['Rejected/Archived'].includes(d.state)).length,
       awaiting:this.countFor(b.id,this.awaitingStates()), changes:this.countFor(b.id,['Changes Requested']), approved:this.countFor(b.id,['Approved']),
       open:()=>this.selectBrand(b.id) }; });
@@ -2110,7 +2128,7 @@ class Component extends DCLogic {
 
     // admin
     const look=s.brandLookup;
-    const adminBrands = s.brands.map(b=>{ const logo=(b.guide&&b.guide.logoUrl)||''; const profile=b.profileLabel||b.profileUrl||''; return { name:b.name, tile:b.tile, shade:b.shade, logoUrl:logo, hasLogo:!!logo, noLogo:!logo, profileLabel:profile, profileUrl:b.profileUrl||profile, hasProfile:!!profile, onName:(e)=>this.renameBrand(b.id, e.target.value), onLogo:(e)=>this.uploadBrandLogo(b.id, e),
+    const adminBrands = s.brands.map(b=>{ const logo=(b.guide&&b.guide.logoUrl)||''; const profile=b.profileLabel||b.profileUrl||''; return { name:b.name, tile:b.tile, shade:b.shade, logoUrl:logo, hasLogo:!!logo, noLogo:!logo, profileLabel:profile, profileUrl:b.profileUrl||profile, hasProfile:!!profile, statusLabel:b.status==='hold'?'Hold':'Active', onStatus:(e)=>this.setBrandStatus(b.id, e.target.value), onName:(e)=>this.renameBrand(b.id, e.target.value), onLogo:(e)=>this.uploadBrandLogo(b.id, e),
       members: s.users.filter(u=>u.roles[b.id] && u.roles[b.id]!=='—').length,
       approvers: s.users.filter(u=>['Admin','Reviewer'].includes(u.roles[b.id])).length,
       total: s.designs.filter(d=>d.brandId===b.id).length }; });
@@ -2171,6 +2189,7 @@ class Component extends DCLogic {
     const titles={ dashboard:{crumb:clientView?'Shared with you':'All brands',title:clientView?'Your brands':'Owner dashboard'}, notifications:{crumb:clientView?'Your brands':'All brands',title:'Notifications'}, admin:{crumb:'Account',title:'Admin & roles'},
       queue:{crumb:cb?cb.name:'',title:'Review queue'}, approved:{crumb:cb?cb.name:'',title:'Approved to post'}, calendar:{crumb:cb?cb.name:'',title:'Schedule'}, guidelines:{crumb:cb?cb.name:'',title:'Brand guidelines'}, review:{crumb:cb?cb.name:'',title:(d?d.title:'Review')}, compare:{crumb:cb?cb.name:'',title:'Version comparison'}, plans:{crumb:cb?cb.name:'',title:'Content plan'}, planDetail:{crumb:cb?cb.name:'',title:'Content plan'}, feed:{crumb:cb?cb.name:'',title:'Feed preview'} };
     const page=titles[view]||{crumb:'',title:''};
+    const heldBrand = cb && cb.status==='hold';
     const guideBrand = cb? cb.name : (visibleBrands[0]?visibleBrands[0].name:'');
     const gb = this.guideBrandObj();
     const gg = gb.guide || {logoName:'', logoUrl:'', colors:[], displayFont:'Urbanist', bodyFont:'Urbanist', dos:[], donts:[]};
@@ -2309,7 +2328,10 @@ class Component extends DCLogic {
       captionFields: (s.captionDraft?s.captionDraft.slides:[]).map(sl=>({name:sl.name, caption:sl.caption||'', onInput:(e)=>this.onCaptionDraft(sl.id, e)})),
       submitOpen:s.submitOpen, approveOpen:s.approveOpen, changesOpen:s.changesOpen, changesNote:s.changesNote,
       subBrand:s.subBrand, subTitle:s.subTitle, subPlatform:s.subPlatform, subDate:s.subDate, subCaption:s.subCaption,
-      brandOptions:visibleBrands.map(b=>b.name),
+      brandOnHold: !!(heldBrand && !['dashboard','admin','notifications'].includes(view)),
+      holdBrandName: cb?cb.name:'',
+      canUploadPlan: !heldBrand,
+      brandOptions: visibleBrands.filter(b=>b.status!=='hold').map(b=>b.name),
       openCommentsWarn, guideBrand, guide,
       guideOpen:s.guideOpen, openGuide:()=>this.openGuide(), closeGuide:()=>this.closeGuide(), saveGuide:()=>this.saveGuide(),
       onGuideLogo:(e)=>this.onGuideLogo(e), clearGuideLogo:()=>this.clearGuideLogo(), addGuideColor:()=>this.addGuideColor(),

@@ -21,8 +21,11 @@ CREATE TABLE IF NOT EXISTS brands (
   profile_url text NOT NULL DEFAULT '',
   profile_label text NOT NULL DEFAULT '',
   profile_handle text NOT NULL DEFAULT '',
-  guide jsonb NOT NULL DEFAULT '{}'::jsonb
+  guide jsonb NOT NULL DEFAULT '{}'::jsonb,
+  status text NOT NULL DEFAULT 'active'
 );
+
+ALTER TABLE brands ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'active';
 
 CREATE TABLE IF NOT EXISTS roles (
   user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
