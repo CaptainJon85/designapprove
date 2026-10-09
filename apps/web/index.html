@@ -181,6 +181,7 @@
     .tabbar button.on{background:var(--ink);color:#fff}
     .tabbar svg{width:18px;height:18px;stroke-width:1.6}
     .pair{grid-template-columns:1fr !important}
+    .people-add{grid-template-columns:1fr !important}
     .input,textarea.input{font-size:16px}
     .dialog{border-radius:24px !important;padding:20px !important;max-height:min(92dvh,860px)}
     .install-banner{left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom))}
@@ -1078,24 +1079,25 @@
           <h4 style="margin:0 0 var(--space-3)">People &amp; roles</h4>
           <p style="font-size:12px;color:var(--color-neutral-600);margin-top:0">Add the agency team and each client. Clients only see the brands you share below.</p>
           <div class="blueprint" style="padding:var(--space-4);margin-bottom:var(--space-4)">
-            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
-              <div class="field" style="flex:1;min-width:140px"><label>Name</label><input class="input" placeholder="Full name" value="{{ inviteName }}" onInput="{{ onInviteName }}"></div>
-              <div class="field" style="flex:1.2;min-width:180px"><label>Email</label><input class="input" type="email" placeholder="name@client.com" value="{{ inviteEmail }}" onInput="{{ onInviteEmail }}"></div>
-              <div class="field" style="width:130px"><label>Type</label><select class="input" value="{{ inviteKind }}" onChange="{{ onInviteKind }}"><option>Agency</option><option>Client</option></select></div>
-              <button type="button" class="btn btn-primary" onClick="{{ addPerson }}">Add person</button>
+            <div class="people-add" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) 150px auto;gap:10px;align-items:end">
+              <div class="field" style="min-width:0"><label>Name</label><input class="input" placeholder="Full name" value="{{ inviteName }}" onInput="{{ onInviteName }}"></div>
+              <div class="field" style="min-width:0"><label>Email</label><input class="input" type="email" placeholder="name@client.com" value="{{ inviteEmail }}" onInput="{{ onInviteEmail }}"></div>
+              <div class="field"><label>Type</label><select class="input" value="{{ inviteKind }}" onChange="{{ onInviteKind }}"><option>Agency</option><option>Client</option></select></div>
+              <button type="button" class="btn btn-primary" style="min-height:44px" onClick="{{ addPerson }}">Add person</button>
             </div>
             <p style="font-size:12px;color:var(--color-neutral-600);margin:12px 0 0">We’ll email them a temporary password. They choose their own the first time they sign in.</p>
             <sc-if value="{{ hasInviteError }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;padding:10px 12px;border-radius:14px;background:#FFF0EF;color:#4E1414;font-size:13px">{{ inviteError }}</div></sc-if>
           </div>
           <div class="blueprint" style="padding:0;overflow-x:auto">
-            <table class="table" style="min-width:640px">
-              <thead><tr><th>Person</th><sc-for list="{{ brandHeads }}" as="h" hint-placeholder-count="4"><th>{{ h }}</th></sc-for></tr></thead>
+            <table class="table" style="min-width:720px">
+              <thead><tr><th style="width:28%">Person</th><th style="width:150px">Type</th><sc-for list="{{ brandHeads }}" as="h" hint-placeholder-count="4"><th style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">{{ h.name }}</th></sc-for></tr></thead>
               <tbody>
                 <sc-for list="{{ userRows }}" as="u" hint-placeholder-count="5">
                   <tr>
-                    <td><div style="font-weight:500">{{ u.name }}</div><div style="font-size:11px;color:var(--color-neutral-600)">{{ u.email }}</div><select class="input" style="min-height:32px;font-size:12px;margin-top:6px" value="{{ u.kind }}" onChange="{{ u.setKind }}"><option>Agency</option><option>Client</option></select></td>
+                    <td style="vertical-align:middle"><div style="font-weight:500">{{ u.name }}</div><div style="font-size:11px;color:var(--color-neutral-600)">{{ u.email }}</div></td>
+                    <td style="vertical-align:middle;width:150px"><select class="input" style="min-height:44px;font-size:13px;width:100%" value="{{ u.kind }}" onChange="{{ u.setKind }}"><option>Agency</option><option>Client</option></select></td>
                     <sc-for list="{{ u.cells }}" as="c" hint-placeholder-count="4">
-                      <td><select class="input" style="min-height:32px;font-size:12px" value="{{ c.role }}" onChange="{{ c.set }}"><option>Admin</option><option>Reviewer</option><option>Designer</option><option>Viewer</option><option>—</option></select></td>
+                      <td style="vertical-align:middle"><select class="input" style="min-height:44px;font-size:13px;width:100%" value="{{ c.role }}" onChange="{{ c.set }}"><option>Admin</option><option>Reviewer</option><option>Designer</option><option>Viewer</option><option>—</option></select></td>
                     </sc-for>
                   </tr>
                 </sc-for>
@@ -2132,7 +2134,7 @@ class Component extends DCLogic {
       members: s.users.filter(u=>u.roles[b.id] && u.roles[b.id]!=='—').length,
       approvers: s.users.filter(u=>['Admin','Reviewer'].includes(u.roles[b.id])).length,
       total: s.designs.filter(d=>d.brandId===b.id).length }; });
-    const brandHeads = s.brands.map(b=>b.tile);
+    const brandHeads = s.brands.map(b=>({ name:b.name, tile:b.tile }));
     const userRows = s.users.map(u=>({ name:u.name, email:u.email, kind:u.kind==='client'?'Client':'Agency', setKind:(e)=>this.setKind(u.id, e.target.value), cells: s.brands.map(b=>({ role:u.roles[b.id]||'—', set:(e)=>this.setRole(u.id,b.id,e.target.value) })) }));
     const clientAccess = s.users.filter(u=>u.kind==='client').map(u=>{
       const granted = s.brands.filter(b=>this.canSeeBrand(u, b.id));
