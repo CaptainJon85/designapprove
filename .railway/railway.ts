@@ -20,6 +20,7 @@ export default defineRailway(() => {
     healthcheckTimeout: 300,
     replicas: { sfo: 1 },
     env: {
+      PORT: "8080",
       DATABASE_URL: Postgres.env.DATABASE_URL,
       SESSION_SECRET: preserve(),
       S3_BUCKET: "${{proofline.BUCKET}}",

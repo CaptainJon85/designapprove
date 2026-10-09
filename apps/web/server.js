@@ -1,5 +1,6 @@
 const http = require('http');
 const https = require('https');
+const dns = require('dns');
 const fs = require('fs');
 const path = require('path');
 
@@ -18,6 +19,14 @@ const types = {
   '.ico': 'image/x-icon'
 };
 
+function lookup(hostname, options, callback){
+  dns.lookup(hostname, { all: true }, (err, addresses) => {
+    if (err || !addresses || !addresses.length) return callback(err || new Error('not found'));
+    const chosen = addresses.find(item => item.family === 4) || addresses[0];
+    callback(null, chosen.address, chosen.family);
+  });
+}
+
 function proxy(req, res){
   const target = new URL(req.url, apiOrigin);
   const headers = Object.assign({}, req.headers, {
@@ -26,8 +35,7 @@ function proxy(req, res){
     'x-forwarded-proto': req.headers['x-forwarded-proto'] || (process.env.RAILWAY_ENVIRONMENT ? 'https' : 'http')
   });
   const transport = target.protocol === 'https:' ? https : http;
-  const family = target.hostname.endsWith('.railway.internal') ? 6 : undefined;
-  const upstream = transport.request(target, { method: req.method, headers, family }, upstreamRes => {
+  const upstream = transport.request(target, { method: req.method, headers, lookup }, upstreamRes => {
     res.writeHead(upstreamRes.statusCode || 502, upstreamRes.headers);
     upstreamRes.pipe(res);
   });
