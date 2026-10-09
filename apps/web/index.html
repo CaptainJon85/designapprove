@@ -1040,11 +1040,14 @@
           <div style="display:flex;align-items:baseline;margin-bottom:var(--space-3)"><h4 style="margin:0">Brand workspaces</h4></div>
           <div class="blueprint" style="padding:var(--space-4);margin-bottom:var(--space-4)">
             <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
-              <div class="field" style="flex:1;min-width:160px"><label>Customer</label><input class="input" placeholder="Brand name" value="{{ brandName }}" onInput="{{ onBrandName }}"></div>
-              <div class="field" style="flex:1.6;min-width:220px"><label>Website or social</label><input class="input" placeholder="brand.com or instagram.com/brand" value="{{ brandLink }}" onInput="{{ onBrandLink }}"></div>
+              <div class="field" style="flex:1;min-width:160px"><label>Customer</label><input class="input" placeholder="Brand name" value="{{ brandName }}" onInput="{{ onBrandName }}" onKeyDown="{{ onBrandKey }}"></div>
+              <div class="field" style="flex:1.6;min-width:220px"><label>Website or social</label><input class="input" placeholder="brand.com or instagram.com/brand" value="{{ brandLink }}" onInput="{{ onBrandLink }}" onKeyDown="{{ onBrandKey }}"></div>
               <button type="button" class="btn btn-primary" onClick="{{ createBrand }}">{{ brandButton }}</button>
             </div>
-            <p style="font-size:12px;color:var(--color-neutral-600);margin:12px 0 0">Paste their website or social profiles, separated by commas if there are a few. Proofline fetches a logo from there and uses it as the brand icon. You can still replace the icon by clicking it.</p>
+            <p style="font-size:12px;color:var(--color-neutral-600);margin:12px 0 0">Paste a website or social profile. Proofline searches it, connects the brand, and uses the logo as the icon.</p>
+            <sc-if value="{{ brandLookupLoading }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--color-neutral-700)">Searching that page…</div></sc-if>
+            <sc-if value="{{ brandLookupOk }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px"><img src="{{ brandLookupLogo }}" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--color-divider)"><span>Connected to {{ brandLookupLabel }}</span></div></sc-if>
+            <sc-if value="{{ brandLookupMiss }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;padding:10px 12px;border-radius:14px;background:#FFF0EF;color:#4E1414;font-size:13px">{{ brandLookupMessage }}</div></sc-if>
             <sc-if value="{{ hasBrandError }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;padding:10px 12px;border-radius:14px;background:#FFF0EF;color:#4E1414;font-size:13px">{{ brandError }}</div></sc-if>
           </div>
           <div class="blueprint" style="padding:0">
@@ -1053,7 +1056,7 @@
               <tbody>
                 <sc-for list="{{ adminBrands }}" as="b" hint-placeholder-count="4">
                   <tr>
-                    <td><div style="display:flex;align-items:center;gap:9px"><label title="Upload logo" style="width:32px;height:32px;flex:none;border-radius:50%;overflow:hidden;display:grid;place-items:center;cursor:pointer;background: {{ b.shade }};position:relative"><sc-if value="{{ b.hasLogo }}" hint-placeholder-val="{{ false }}"><img src="{{ b.logoUrl }}" alt="" style="width:32px;height:32px;object-fit:cover;display:block"></sc-if><sc-if value="{{ b.noLogo }}" hint-placeholder-val="{{ true }}"><span style="font-family:var(--font-heading);font-size:11px;color:#10141A">{{ b.tile }}</span></sc-if><input type="file" accept="image/*,.svg" onChange="{{ b.onLogo }}" style="display:none"></label><div style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1"><input class="input" style="min-height:32px;font-size:13px" value="{{ b.name }}" onInput="{{ b.onName }}"><sc-if value="{{ b.hasProfile }}" hint-placeholder-val="{{ false }}"><div style="font-size:11px;color:var(--color-neutral-600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.profileLabel }}</div></sc-if></div></div></td>
+                    <td><div style="display:flex;align-items:center;gap:9px"><label title="Upload logo" style="width:32px;height:32px;flex:none;border-radius:50%;overflow:hidden;display:grid;place-items:center;cursor:pointer;background: {{ b.shade }};position:relative"><sc-if value="{{ b.hasLogo }}" hint-placeholder-val="{{ false }}"><img src="{{ b.logoUrl }}" alt="" style="width:32px;height:32px;object-fit:cover;display:block"></sc-if><sc-if value="{{ b.noLogo }}" hint-placeholder-val="{{ true }}"><span style="font-family:var(--font-heading);font-size:11px;color:#10141A">{{ b.tile }}</span></sc-if><input type="file" accept="image/*,.svg" onChange="{{ b.onLogo }}" style="display:none"></label><div style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1"><input class="input" style="min-height:32px;font-size:13px" value="{{ b.name }}" onInput="{{ b.onName }}"><sc-if value="{{ b.hasProfile }}" hint-placeholder-val="{{ false }}"><a href="{{ b.profileUrl }}" target="_blank" rel="noopener" style="font-size:11px;color:var(--color-neutral-600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none">{{ b.profileLabel }}</a></sc-if></div></div></td>
                     <td>{{ b.members }}</td>
                     <td>{{ b.approvers }}</td>
                     <td>{{ b.total }}</td>
@@ -1807,47 +1810,90 @@ class Component extends DCLogic {
     const letters=parts.length>=2 ? (parts[0][0]+parts[1][0]) : String(name||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,2);
     return (letters||'B').toUpperCase();
   }
+  onBrandLink(e){
+    this.setState({brandLink:e.target.value, brandError:''});
+    this.scheduleBrandLookup();
+  }
+  onBrandKey(e){
+    if(e.key!=='Enter') return;
+    if(e.preventDefault) e.preventDefault();
+    this.createBrand();
+  }
+  scheduleBrandLookup(){
+    clearTimeout(this._lookup);
+    const link=(this.state.brandLink||'').trim();
+    if(!link){ this.setState({brandLookup:null}); return; }
+    this.setState({brandLookup:{key:link, status:'loading'}});
+    this._lookup=setTimeout(()=>this.lookupBrand(link), 450);
+  }
+  async lookupBrand(link){
+    try{
+      const r=await fetch('./api/logo', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url:link})});
+      const data=await r.json().catch(()=>({}));
+      if((this.state.brandLink||'').trim()!==link) return null;
+      if(!r.ok && (r.status===400 || r.status===401 || r.status===403)){
+        const brandLookup={key:link, status:'error', error:data.error||'Check the website or social link.'};
+        this.setState({brandLookup});
+        return brandLookup;
+      }
+      const brandLookup={
+        key:link, status:data.logoUrl?'ok':'miss',
+        error:data.logoUrl?'':(data.error||'No logo was found there.'),
+        logoUrl:data.logoUrl||'', logoName:data.logoName||'logo',
+        profileUrl:data.profileUrl||link, profileLabel:data.profileLabel||link,
+        profileHandle:data.handle||'', title:data.title||''
+      };
+      const patch={brandLookup};
+      if(!(this.state.brandName||'').trim() && data.title) patch.brandName=String(data.title).slice(0,80);
+      this.setState(patch);
+      return brandLookup;
+    }catch(err){
+      if((this.state.brandLink||'').trim()!==link) return null;
+      const brandLookup={key:link, status:'error', error:'Could not reach that page.'};
+      this.setState({brandLookup});
+      return brandLookup;
+    }
+  }
   async createBrand(){
     if(this._brandBusy) return;
     const name=(this.state.brandName||'').trim().slice(0,80);
     const link=(this.state.brandLink||'').trim();
-    if(!name){ this.setState({brandError:'Enter the customer name.'}); return; }
+    if(!name && !link){ this.setState({brandError:'Enter the customer name or their website.'}); return; }
     this._brandBusy=true;
     this.setState({brandBusy:true, brandError:''});
     let logoUrl='', logoName='', profileUrl='', profileLabel='', profileHandle='';
     let fetchNote='';
+    let resolvedName=name;
     if(link){
-      try{
-        const r=await fetch('./api/logo', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({url:link})});
-        const data=await r.json().catch(()=>({}));
-        if(!r.ok && (r.status===400 || r.status===401 || r.status===403)){
-          this._brandBusy=false;
-          this.setState({brandBusy:false, brandError:data.error||'Check the website or social link.'});
-          return;
-        }
-        if(data.logoUrl){ logoUrl=data.logoUrl; logoName=data.logoName||'logo'; }
-        profileUrl=data.profileUrl||link;
-        profileLabel=data.profileLabel||link;
-        profileHandle=data.handle||'';
-        if(!data.logoUrl) fetchNote=data.error||'No logo was found there.';
-      }catch(err){
-        profileUrl=link;
-        profileLabel=link;
-        fetchNote='Could not reach that page.';
+      clearTimeout(this._lookup);
+      let found=this.state.brandLookup;
+      if(!found || found.key!==link || found.status==='loading') found=await this.lookupBrand(link);
+      if(!found){ this._brandBusy=false; this.setState({brandBusy:false}); return; }
+      if(found.status==='error' && !found.profileUrl){
+        this._brandBusy=false;
+        this.setState({brandBusy:false, brandError:found.error||'Check the website or social link.'});
+        return;
       }
+      if(found.logoUrl){ logoUrl=found.logoUrl; logoName=found.logoName||'logo'; }
+      profileUrl=found.profileUrl||link;
+      profileLabel=found.profileLabel||link;
+      profileHandle=found.profileHandle||'';
+      if(!resolvedName) resolvedName=(found.title||profileLabel||'New brand').slice(0,80);
+      if(!found.logoUrl) fetchNote=found.error||'No logo was found there.';
     }
+    if(!resolvedName){ this._brandBusy=false; this.setState({brandBusy:false, brandError:'Enter the customer name.'}); return; }
     const shades=['#FD8E8C','#83A2DB','#FFCE87','#B9DEFF'];
     const id='b'+Date.now();
     this.state.brands.push({
-      id, name, tile:this.tileFor(name), shade:shades[this.state.brands.length%shades.length], onShade:'#10141A', mute:'#1F3152',
+      id, name:resolvedName, tile:this.tileFor(resolvedName), shade:shades[this.state.brands.length%shades.length], onShade:'#10141A', mute:'#1F3152',
       profileUrl, profileLabel, profileHandle,
       guide:{logoName, logoUrl, colors:[], displayFont:'Urbanist', bodyFont:'Urbanist', dos:[], donts:[]}
     });
     this.state.users.forEach(u=>{ u.roles[id]=u.master?'Admin':'—'; });
     this._brandBusy=false;
-    this.setState({brandName:'', brandLink:'', brandBusy:false, brandError:''});
+    this.setState({brandName:'', brandLink:'', brandLookup:null, brandBusy:false, brandError:''});
     this.bump();
-    this.flash(logoUrl ? ('Added '+name+' with their logo.') : (fetchNote ? ('Added '+name+'. '+fetchNote) : 'Brand workspace created'));
+    this.flash(logoUrl ? ('Added '+resolvedName+' with their logo.') : (fetchNote ? ('Added '+resolvedName+'. '+fetchNote) : 'Brand workspace created'));
   }
 
   fontStack(name){ const n=(name||'Urbanist').replace(/'/g,''); return "'"+n+"',system-ui,sans-serif"; }
@@ -2063,7 +2109,8 @@ class Component extends DCLogic {
     const unreadCount = myNotes.filter(n=>n.unread).length;
 
     // admin
-    const adminBrands = s.brands.map(b=>{ const logo=(b.guide&&b.guide.logoUrl)||''; const profile=b.profileLabel||b.profileUrl||''; return { name:b.name, tile:b.tile, shade:b.shade, logoUrl:logo, hasLogo:!!logo, noLogo:!logo, profileLabel:profile, hasProfile:!!profile, onName:(e)=>this.renameBrand(b.id, e.target.value), onLogo:(e)=>this.uploadBrandLogo(b.id, e),
+    const look=s.brandLookup;
+    const adminBrands = s.brands.map(b=>{ const logo=(b.guide&&b.guide.logoUrl)||''; const profile=b.profileLabel||b.profileUrl||''; return { name:b.name, tile:b.tile, shade:b.shade, logoUrl:logo, hasLogo:!!logo, noLogo:!logo, profileLabel:profile, profileUrl:b.profileUrl||profile, hasProfile:!!profile, onName:(e)=>this.renameBrand(b.id, e.target.value), onLogo:(e)=>this.uploadBrandLogo(b.id, e),
       members: s.users.filter(u=>u.roles[b.id] && u.roles[b.id]!=='—').length,
       approvers: s.users.filter(u=>['Admin','Reviewer'].includes(u.roles[b.id])).length,
       total: s.designs.filter(d=>d.brandId===b.id).length }; });
@@ -2215,8 +2262,15 @@ class Component extends DCLogic {
       adminBrands, brandHeads, userRows, clientAccess, noClients:clientAccess.length===0, createBrand:()=>this.createBrand(),
       brandName:s.brandName||'', brandLink:s.brandLink||'', brandError:s.brandError||'', hasBrandError:!!s.brandError,
       brandButton:s.brandBusy?'Fetching logo…':'Add brand',
+      brandLookupLoading:!!(look && look.status==='loading'),
+      brandLookupOk:!!(look && look.status==='ok' && look.logoUrl),
+      brandLookupLogo:(look && look.logoUrl)||'',
+      brandLookupLabel:(look && look.profileLabel)||'',
+      brandLookupMiss:!!(look && (look.status==='miss' || look.status==='error')),
+      brandLookupMessage:(look && look.error)||'',
       onBrandName:(e)=>this.setState({brandName:e.target.value, brandError:''}),
-      onBrandLink:(e)=>this.setState({brandLink:e.target.value, brandError:''}),
+      onBrandLink:(e)=>this.onBrandLink(e),
+      onBrandKey:(e)=>this.onBrandKey(e),
       inviteName:s.inviteName, inviteEmail:s.inviteEmail, inviteKind:s.inviteKind||'Agency',
       inviteError:s.inviteError||'', hasInviteError:!!s.inviteError,
       onInviteName:(e)=>this.onInviteName(e), onInviteEmail:(e)=>this.onInviteEmail(e), onInviteKind:(e)=>this.onInviteKind(e),

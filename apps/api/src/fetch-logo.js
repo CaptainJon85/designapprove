@@ -97,6 +97,23 @@ function resolveUrl(base, href){
   }
 }
 
+function pageTitle(html){
+  const patterns = [
+    /<meta\b[^>]*property=["']og:site_name["'][^>]*content=["']([\s\S]*?)["']/i,
+    /<meta\b[^>]*content=["']([\s\S]*?)["'][^>]*property=["']og:site_name["']/i
+  ];
+  for (let i = 0; i < patterns.length; i++) {
+    const match = html.match(patterns[i]);
+    if (match && match[1]) {
+      const title = decodeAttr(match[1]).replace(/\s+/g, ' ').trim().slice(0, 80);
+      if (title) return title;
+    }
+  }
+  const title = html.match(/<title[^>]*>([^<]{1,160})<\/title>/i);
+  if (!title) return '';
+  return decodeAttr(title[1]).replace(/\s+/g, ' ').trim().split(/\s+[|–—-]\s+/)[0].slice(0, 80);
+}
+
 function socialInfo(url){
   const host = url.hostname.replace(/^www\./, '').toLowerCase();
   const kind = SOCIAL_HOSTS[host];
@@ -335,6 +352,7 @@ async function downloadImage(candidate){
 
 async function logoForTarget(target){
   await assertPublic(target.url);
+  let title = '';
   const candidates = await socialCandidates(target);
   candidates.push(
     { url: target.origin + '/apple-touch-icon.png', score: 160, name: 'apple-touch-icon.png' },
@@ -343,6 +361,7 @@ async function logoForTarget(target){
   try {
     const page = await fetchChecked(target.url, 'text/html,application/xhtml+xml', 800000);
     const html = page.buffer.toString('utf8');
+    title = pageTitle(html);
     const fromHtml = collectFromHtml(html, page.finalUrl, !!target.kind);
     const manifest = fromHtml.find(item => item.manifest);
     candidates.push(...fromHtml.filter(item => !item.manifest));
@@ -368,6 +387,7 @@ async function logoForTarget(target){
     try {
       const image = await downloadImage(ordered[i]);
       if (!image) continue;
+      image.title = title;
       if (image.square) return image;
       if (!loose) loose = image;
     } catch (err) {
@@ -387,6 +407,7 @@ async function fetchLogo(input){
         return {
           logoUrl: image.logoUrl,
           logoName: image.logoName,
+          title: image.title || '',
           profileUrl: targets[i].url,
           profileLabel: targets.map(item => item.label).join(' · '),
           handle: targets[i].displayHandle || ''

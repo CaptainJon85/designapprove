@@ -1,4 +1,4 @@
-const CACHE = 'proofline-v9';
+const CACHE = 'proofline-v10';
 const ASSETS = [
   './',
   './index.html',
