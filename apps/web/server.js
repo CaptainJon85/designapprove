@@ -22,8 +22,10 @@ const types = {
 function lookup(hostname, options, callback){
   dns.lookup(hostname, { all: true }, (err, addresses) => {
     if (err || !addresses || !addresses.length) return callback(err || new Error('not found'));
-    const chosen = addresses.find(item => item.family === 4) || addresses[0];
-    callback(null, chosen.address, chosen.family);
+    const v4 = addresses.filter(item => item.family === 4);
+    const chosen = v4.length ? v4 : addresses;
+    if (options && options.all) return callback(null, chosen);
+    callback(null, chosen[0].address, chosen[0].family);
   });
 }
 
