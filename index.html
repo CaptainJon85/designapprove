@@ -206,7 +206,7 @@
         </div>
       </div>
       <h3 style="font-size:32px;letter-spacing:-.03em;margin:0 0 8px">Sign in</h3>
-      <p style="margin:0 0 22px;font-size:14px;color:var(--color-neutral-600);line-height:1.45">Sign in with the email and password set up for you. Clients only see the brands an agency has shared with them.</p>
+      <p style="margin:0 0 22px;font-size:14px;color:var(--color-neutral-600);line-height:1.45">Sign in with the email and password you were given. New people choose their own password the first time they sign in.</p>
       <div class="field" style="margin-bottom:12px">
         <label for="login-email">Email</label>
         <input id="login-email" class="input" type="email" autocomplete="username" placeholder="you@company.com" value="{{ loginEmail }}" onInput="{{ onLoginEmail }}">
@@ -219,6 +219,36 @@
         <div style="margin:8px 0 0;padding:10px 12px;border-radius:14px;background:#FFF0EF;color:#4E1414;font-size:13px">{{ loginError }}</div>
       </sc-if>
       <button class="btn btn-primary" type="submit" style="width:100%;margin-top:18px">Continue</button>
+    </form>
+  </div>
+</sc-if>
+
+<sc-if value="{{ mustChange }}" hint-placeholder-val="{{ false }}">
+  <div class="login">
+    <form class="login-card" onSubmit="{{ saveNewPassword }}">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+        <div style="width:44px;height:44px;border-radius:14px;background:#10141A;display:grid;place-items:center;color:#fff;flex:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <div>
+          <div style="font-family:var(--font-heading);font-weight:500;font-size:22px;letter-spacing:-.02em;line-height:1">Proofline</div>
+          <div style="font-size:12px;color:var(--color-neutral-600);margin-top:3px">Review &amp; approval</div>
+        </div>
+      </div>
+      <h3 style="font-size:32px;letter-spacing:-.03em;margin:0 0 8px">Choose a new password</h3>
+      <p style="margin:0 0 22px;font-size:14px;color:var(--color-neutral-600);line-height:1.45">This is your first sign-in. Choose a password only you know. It needs at least 8 characters, and it cannot be the temporary one from your email.</p>
+      <div class="field" style="margin-bottom:12px">
+        <label for="new-password">New password</label>
+        <input id="new-password" class="input" type="password" autocomplete="new-password" placeholder="At least 8 characters" value="{{ newPassword }}" onInput="{{ onNewPassword }}">
+      </div>
+      <div class="field" style="margin-bottom:8px">
+        <label for="confirm-password">Confirm password</label>
+        <input id="confirm-password" class="input" type="password" autocomplete="new-password" placeholder="Type it again" value="{{ confirmPassword }}" onInput="{{ onConfirmPassword }}">
+      </div>
+      <sc-if value="{{ hasPasswordError }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:8px 0 0;padding:10px 12px;border-radius:14px;background:#FFF0EF;color:#4E1414;font-size:13px">{{ passwordError }}</div>
+      </sc-if>
+      <button class="btn btn-primary" type="submit" style="width:100%;margin-top:18px">Save and continue</button>
     </form>
   </div>
 </sc-if>
@@ -1022,10 +1052,9 @@
               <div class="field" style="flex:1;min-width:140px"><label>Name</label><input class="input" placeholder="Full name" value="{{ inviteName }}" onInput="{{ onInviteName }}"></div>
               <div class="field" style="flex:1.2;min-width:180px"><label>Email</label><input class="input" type="email" placeholder="name@client.com" value="{{ inviteEmail }}" onInput="{{ onInviteEmail }}"></div>
               <div class="field" style="width:130px"><label>Type</label><select class="input" value="{{ inviteKind }}" onChange="{{ onInviteKind }}"><option>Agency</option><option>Client</option></select></div>
-              <div class="field" style="flex:1;min-width:140px"><label>Password</label><input class="input" type="text" placeholder="At least 8 characters" value="{{ invitePassword }}" onInput="{{ onInvitePassword }}"></div>
               <button type="button" class="btn btn-primary" onClick="{{ addPerson }}">Add person</button>
             </div>
-            <p style="font-size:12px;color:var(--color-neutral-600);margin:12px 0 0">They get an email asking them to sign in, with the password you set here.</p>
+            <p style="font-size:12px;color:var(--color-neutral-600);margin:12px 0 0">We’ll email them a temporary password. They choose their own the first time they sign in.</p>
             <sc-if value="{{ hasInviteError }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;padding:10px 12px;border-radius:14px;background:#FFF0EF;color:#4E1414;font-size:13px">{{ inviteError }}</div></sc-if>
           </div>
           <div class="blueprint" style="padding:0;overflow-x:auto">
@@ -1327,7 +1356,8 @@ class Component extends DCLogic {
       menuOpen:false, sheetOpen:false, installOffer:(function(){ try { const mobile=window.matchMedia('(max-width:860px)').matches; const standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone; if(mobile&&!standalone&&!localStorage.getItem('pwa-dismiss')) return /iphone|ipad|ipod/i.test(navigator.userAgent)?'ios':'android'; } catch(err) {} return ''; })(),
       brands, designs, users, notes, tick:0,
       authed:false, ready:false, booting:true, sessionId:null, loginEmail:'', loginPassword:'', loginError:'',
-      inviteName:'', inviteEmail:'', inviteKind:'Agency', invitePassword:'', inviteError:'',
+      inviteName:'', inviteEmail:'', inviteKind:'Agency', inviteError:'',
+      mustChange:false, newPassword:'', confirmPassword:'', passwordError:'',
     };
     this.STATE_META = {
       'Draft':{label:'Draft', cls:'tag-neutral'},
@@ -1362,7 +1392,7 @@ class Component extends DCLogic {
   applyWorkspace(data){
     const ws=data.workspace||{};
     this.setState({
-      authed:true, ready:true, booting:false, sessionId:data.user.id,
+      authed:true, ready:true, booting:false, mustChange:!!(data.user && data.user.mustChangePassword), sessionId:data.user.id,
       users:ws.users||[], brands:ws.brands||[], designs:ws.designs||[], plans:ws.plans||[], notes:ws.notes||[],
       loginPassword:'', loginError:'', view:'dashboard', brandId:null, designId:null, menuOpen:false
     });
@@ -1426,7 +1456,7 @@ class Component extends DCLogic {
   }
   signOut(){
     fetch('./api/logout', {method:'POST', credentials:'include'}).catch(()=>{});
-    this.setState({authed:false, ready:false, sessionId:null, loginPassword:'', loginError:'', view:'dashboard', menuOpen:false, users:[], brands:[], designs:[], plans:[], notes:[], brandId:null, designId:null});
+    this.setState({authed:false, ready:false, mustChange:false, newPassword:'', confirmPassword:'', passwordError:'', sessionId:null, loginPassword:'', loginError:'', view:'dashboard', menuOpen:false, users:[], brands:[], designs:[], plans:[], notes:[], brandId:null, designId:null});
   }
 
   toggleMenu(){ this.setState(s=>({menuOpen:!s.menuOpen})); }
@@ -1660,24 +1690,40 @@ class Component extends DCLogic {
   onInviteName(e){ this.setState({inviteName:e.target.value, inviteError:''}); }
   onInviteEmail(e){ this.setState({inviteEmail:e.target.value, inviteError:''}); }
   onInviteKind(e){ this.setState({inviteKind:e.target.value}); }
-  onInvitePassword(e){ this.setState({invitePassword:e.target.value, inviteError:''}); }
   addPerson(){
     const name=(this.state.inviteName||'').trim();
     const email=(this.state.inviteEmail||'').trim().toLowerCase();
-    const password=this.state.invitePassword||'';
     const kind=this.state.inviteKind==='Client'?'client':'agency';
-    if(!name || !email || password.length<8){ this.setState({inviteError:'Enter a name, email, and a password of at least 8 characters.'}); return; }
-    fetch('./api/users', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name, email, password, kind})})
+    if(!name || !email){ this.setState({inviteError:'Enter a name and email.'}); return; }
+    fetch('./api/users', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name, email, kind})})
       .then(r=>r.json().then(data=>({ok:r.ok, data})))
       .then(({ok, data})=>{
         if(!ok || !data.user){ this.setState({inviteError:data.error||'Could not add that person.'}); return; }
         this.state.users.push(data.user);
-        this.setState({inviteName:'', inviteEmail:'', invitePassword:'', inviteError:''});
+        this.setState({inviteName:'', inviteEmail:'', inviteError:''});
         this.bump();
-        const mailed = data.email && data.email.sent;
-        this.flash(mailed ? 'Emailed '+email+' their sign-in details.' : name+' was added. The sign-in email could not be sent.');
+        this.flash('Emailed '+email+' a temporary password.');
       })
       .catch(()=>this.setState({inviteError:'Could not add that person.'}));
+  }
+  onNewPassword(e){ this.setState({newPassword:e.target.value, passwordError:''}); }
+  onConfirmPassword(e){ this.setState({confirmPassword:e.target.value, passwordError:''}); }
+  saveNewPassword(e){
+    if(e && e.preventDefault) e.preventDefault();
+    const password=this.state.newPassword||'';
+    const confirm=this.state.confirmPassword||'';
+    if(password.length<8){ this.setState({passwordError:'Use at least 8 characters.'}); return; }
+    if(password!==confirm){ this.setState({passwordError:'Those passwords don’t match.'}); return; }
+    fetch('./api/password', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password})})
+      .then(r=>r.json().then(data=>({ok:r.ok, data})))
+      .then(({ok, data})=>{
+        if(!ok || !data.user){ this.setState({passwordError:data.error||'Could not save the new password.'}); return; }
+        const user=this.state.users.find(u=>u.id===data.user.id);
+        if(user) user.mustChangePassword=false;
+        this.setState({mustChange:false, newPassword:'', confirmPassword:'', passwordError:''});
+        this.flash('Password saved');
+      })
+      .catch(()=>this.setState({passwordError:'Could not save the new password.'}));
   }
   setKind(uid, kind){
     const u=this.state.users.find(x=>x.id===uid);
@@ -2001,10 +2047,12 @@ class Component extends DCLogic {
     const initials = me.name ? me.name.split(' ').map(p=>p[0]).slice(0,2).join('') : '';
 
     return {
-      booting:!!s.booting, signedIn:!!s.authed, signedOut:!s.authed && !s.booting,
+      booting:!!s.booting, mustChange:!!s.authed && !!s.mustChange, signedIn:!!s.authed && !s.mustChange, signedOut:!s.authed && !s.booting,
       loginEmail:s.loginEmail, loginPassword:s.loginPassword, loginError:s.loginError, hasLoginError:!!s.loginError,
       signIn:(e)=>this.signIn(e), signOut:()=>this.signOut(),
       onLoginEmail:(e)=>this.onLoginEmail(e), onLoginPassword:(e)=>this.onLoginPassword(e),
+      newPassword:s.newPassword, confirmPassword:s.confirmPassword, passwordError:s.passwordError, hasPasswordError:!!s.passwordError,
+      onNewPassword:(e)=>this.onNewPassword(e), onConfirmPassword:(e)=>this.onConfirmPassword(e), saveNewPassword:(e)=>this.saveNewPassword(e),
       session:{ name:me.name, role:this.roleLine(me), initials, email:me.email },
       nav:{ dashboard:view==='dashboard'?'on':'', notifications:view==='notifications'?'on':'', admin:view==='admin'?'on':'',
         isDashboard:view==='dashboard', isQueue:view==='queue', isReview:view==='review', isCompare:view==='compare',
@@ -2058,9 +2106,9 @@ class Component extends DCLogic {
       openReject:()=>this.openReject(), confirmReject:()=>this.confirmReject(), rejectOpen:s.rejectOpen,
       notifList, notifEmpty:notifList.length===0, notifSummary: unreadCount+' unread · '+myNotes.length+' for you', markAllRead:()=>this.markAllRead(),
       adminBrands, brandHeads, userRows, clientAccess, noClients:clientAccess.length===0, createBrand:()=>this.createBrand(),
-      inviteName:s.inviteName, inviteEmail:s.inviteEmail, inviteKind:s.inviteKind||'Agency', invitePassword:s.invitePassword,
+      inviteName:s.inviteName, inviteEmail:s.inviteEmail, inviteKind:s.inviteKind||'Agency',
       inviteError:s.inviteError||'', hasInviteError:!!s.inviteError,
-      onInviteName:(e)=>this.onInviteName(e), onInviteEmail:(e)=>this.onInviteEmail(e), onInviteKind:(e)=>this.onInviteKind(e), onInvitePassword:(e)=>this.onInvitePassword(e),
+      onInviteName:(e)=>this.onInviteName(e), onInviteEmail:(e)=>this.onInviteEmail(e), onInviteKind:(e)=>this.onInviteKind(e),
       addPerson:()=>this.addPerson(),
       // handlers
       goDashboard:()=>this.goDashboard(), goNotifications:()=>this.goNotifications(), goAdmin:()=>this.goAdmin(),

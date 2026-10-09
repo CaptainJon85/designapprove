@@ -10,13 +10,23 @@ module.exports = async (req, res) => {
     const body = store.readBody(req);
     const name = String(body.name || '').trim().slice(0, 80);
     const email = String(body.email || '').trim().toLowerCase();
-    const password = String(body.password || '');
     const kind = body.kind === 'client' ? 'client' : 'agency';
     if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: 'Enter a name and a real email.' });
     }
-    if (password.length < 8) return res.status(400).json({ error: 'Use a password of at least 8 characters.' });
+    if ((found.ws.users || []).some(u => String(u.email || '').toLowerCase() === email)) {
+      return res.status(409).json({ error: 'That email is already in the workspace.' });
+    }
+    const password = store.temporaryPassword();
     const hashed = store.hashPassword(password);
+    const emailResult = await mail.sendMail({
+      to: email,
+      subject: 'Sign in to Proofline',
+      text: mail.inviteText({ name, email, password, kind, url: mail.signInUrl(req) })
+    });
+    if (!emailResult.sent) {
+      return res.status(502).json({ error: emailResult.error || 'The sign-in email could not be sent, so this person was not added.' });
+    }
     let created = null;
     await store.update(ws => {
       if (ws.users.some(u => String(u.email || '').toLowerCase() === email)) {
@@ -32,23 +42,13 @@ module.exports = async (req, res) => {
         email,
         kind,
         master: false,
+        mustChangePassword: true,
         roles,
         passwordSalt: hashed.passwordSalt,
         passwordHash: hashed.passwordHash
       };
       ws.users.push(created);
       return ws;
-    });
-    const emailResult = await mail.sendMail({
-      to: email,
-      subject: 'Sign in to Proofline',
-      text: mail.inviteText({
-        name,
-        email,
-        password,
-        kind,
-        url: mail.signInUrl(req)
-      })
     });
     return res.status(200).json({ user: store.publicUser(created), email: emailResult });
   } catch (err) {
