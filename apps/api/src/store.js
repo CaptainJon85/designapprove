@@ -79,7 +79,7 @@ function tokenFrom(req){
 }
 
 function sessionCookie(token, maxAge){
-  const secure = process.env.VERCEL ? '; Secure' : '';
+  const secure = (process.env.RAILWAY_ENVIRONMENT || process.env.VERCEL) ? '; Secure' : '';
   return 'pf_session=' + encodeURIComponent(token) + '; HttpOnly; Path=/; SameSite=Lax; Max-Age=' + maxAge + secure;
 }
 

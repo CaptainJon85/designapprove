@@ -2,7 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const port = Number(process.env.WEB_PORT || 3000);
+const port = Number(process.env.PORT || process.env.WEB_PORT || 3000);
 const apiOrigin = process.env.API_ORIGIN || 'http://127.0.0.1:3001';
 const root = __dirname;
 
@@ -19,7 +19,11 @@ const types = {
 
 function proxy(req, res){
   const target = new URL(req.url, apiOrigin);
-  const headers = Object.assign({}, req.headers, { host: target.host });
+  const headers = Object.assign({}, req.headers, {
+    host: target.host,
+    'x-forwarded-host': req.headers['x-forwarded-host'] || req.headers.host || '',
+    'x-forwarded-proto': req.headers['x-forwarded-proto'] || (process.env.RAILWAY_ENVIRONMENT ? 'https' : 'http')
+  });
   const upstream = http.request(target, { method: req.method, headers }, upstreamRes => {
     res.writeHead(upstreamRes.statusCode || 502, upstreamRes.headers);
     upstreamRes.pipe(res);
@@ -53,6 +57,6 @@ function serve(req, res){
   });
 }
 
-http.createServer(serve).listen(port, '127.0.0.1', () => {
-  console.log('Web listening on http://127.0.0.1:' + port);
+http.createServer(serve).listen(port, '0.0.0.0', () => {
+  console.log('Web listening on 0.0.0.0:' + port);
 });

@@ -1,10 +1,10 @@
-// Sends through Resend. RESEND_API_KEY is set on the Vercel project.
+// Sends through Resend. RESEND_API_KEY is set on the host.
 // NOTIFY_FROM is optional. The default sender is on proofline.ojsolutions.io.
 
 function signInUrl(req) {
   const headers = (req && req.headers) || {};
   const host = String(headers['x-forwarded-host'] || headers.host || '').split(',')[0].trim();
-  if (host && host !== 'localhost' && !host.endsWith('.vercel.app')) {
+  if (host && host !== 'localhost' && !host.endsWith('.vercel.app') && !host.endsWith('.railway.internal')) {
     const proto = String(headers['x-forwarded-proto'] || 'https').split(',')[0].trim() || 'https';
     return proto + '://' + host;
   }
