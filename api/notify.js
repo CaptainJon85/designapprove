@@ -1,5 +1,6 @@
+const { sendMail } = require('../lib/mail');
+
 // Delivers the designer email. Set RESEND_API_KEY on Vercel.
-// NOTIFY_FROM is optional. The default sender is on the verified domain proofline.ojsolutions.io.
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -17,20 +18,5 @@ module.exports = async (req, res) => {
     return res.status(400).json({ sent: false, error: 'Need a designer email and a comment' });
   }
 
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return res.status(200).json({ sent: false, queued: true, reason: 'missing_key' });
-
-  const from = process.env.NOTIFY_FROM || 'Proofline <notifications@proofline.ojsolutions.io>';
-  try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from, to: [to], subject, text })
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) return res.status(200).json({ sent: false, queued: true, error: data.message || 'Email provider declined' });
-    return res.status(200).json({ sent: true, id: data.id || '' });
-  } catch (err) {
-    return res.status(200).json({ sent: false, queued: true });
-  }
+  return res.status(200).json(await sendMail({ to, subject, text }));
 };

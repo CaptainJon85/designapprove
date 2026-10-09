@@ -1,4 +1,5 @@
 const store = require('../lib/store');
+const mail = require('../lib/mail');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
@@ -38,7 +39,18 @@ module.exports = async (req, res) => {
       ws.users.push(created);
       return ws;
     });
-    return res.status(200).json({ user: store.publicUser(created) });
+    const emailResult = await mail.sendMail({
+      to: email,
+      subject: 'Sign in to Proofline',
+      text: mail.inviteText({
+        name,
+        email,
+        password,
+        kind,
+        url: mail.signInUrl(req)
+      })
+    });
+    return res.status(200).json({ user: store.publicUser(created), email: emailResult });
   } catch (err) {
     const status = err.status || 500;
     return res.status(status).json({ error: err.status ? err.message : 'Could not add that person.' });

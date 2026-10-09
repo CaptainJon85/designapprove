@@ -1025,6 +1025,7 @@
               <div class="field" style="flex:1;min-width:140px"><label>Password</label><input class="input" type="text" placeholder="At least 8 characters" value="{{ invitePassword }}" onInput="{{ onInvitePassword }}"></div>
               <button type="button" class="btn btn-primary" onClick="{{ addPerson }}">Add person</button>
             </div>
+            <p style="font-size:12px;color:var(--color-neutral-600);margin:12px 0 0">They get an email asking them to sign in, with the password you set here.</p>
             <sc-if value="{{ hasInviteError }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;padding:10px 12px;border-radius:14px;background:#FFF0EF;color:#4E1414;font-size:13px">{{ inviteError }}</div></sc-if>
           </div>
           <div class="blueprint" style="padding:0;overflow-x:auto">
@@ -1673,7 +1674,8 @@ class Component extends DCLogic {
         this.state.users.push(data.user);
         this.setState({inviteName:'', inviteEmail:'', invitePassword:'', inviteError:''});
         this.bump();
-        this.flash(name+' can sign in with the password you set.');
+        const mailed = data.email && data.email.sent;
+        this.flash(mailed ? 'Emailed '+email+' their sign-in details.' : name+' was added. The sign-in email could not be sent.');
       })
       .catch(()=>this.setState({inviteError:'Could not add that person.'}));
   }
