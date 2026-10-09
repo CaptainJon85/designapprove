@@ -17,8 +17,17 @@ module.exports = async (req, res) => {
     return res.status(400).json({ sent: false, error: 'Need a designer email and a comment' });
   }
 
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return res.status(200).json({ sent: false, queued: true, reason: 'missing_key' });
+  const key = process.env.RESEND_API_KEY || process.env.RESEND_KEY;
+  if (!key) {
+    const names = Object.keys(process.env).filter((name) => /resend|notify/i.test(name));
+    return res.status(200).json({
+      sent: false,
+      queued: true,
+      reason: 'missing_key',
+      runtime: process.env.VERCEL_ENV || 'unknown',
+      names
+    });
+  }
 
   const from = process.env.NOTIFY_FROM || 'Proofline <notifications@proofline.ojsolutions.io>';
   try {
