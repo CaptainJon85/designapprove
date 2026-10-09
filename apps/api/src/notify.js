@@ -1,4 +1,4 @@
-const { sendMail } = require('../lib/mail');
+const { sendMail } = require('./mail');
 
 // Delivers the designer email. Set RESEND_API_KEY on Vercel.
 module.exports = async (req, res) => {

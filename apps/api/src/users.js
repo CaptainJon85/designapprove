@@ -1,5 +1,5 @@
-const store = require('../lib/store');
-const mail = require('../lib/mail');
+const store = require('./store');
+const mail = require('./mail');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });

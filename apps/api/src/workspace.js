@@ -1,4 +1,4 @@
-const store = require('../lib/store');
+const store = require('./store');
 
 module.exports = async (req, res) => {
   try {

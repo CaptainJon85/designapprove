@@ -1,0 +1,13 @@
+{
+  "name": "@proofline/api",
+  "private": true,
+  "scripts": {
+    "dev": "node src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "@proofline/db": "*",
+    "@proofline/storage": "*",
+    "express": "^4.21.2"
+  }
+}

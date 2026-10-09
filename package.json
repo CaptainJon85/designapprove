@@ -1,7 +1,14 @@
 {
   "name": "proofline",
   "private": true,
-  "dependencies": {
-    "@vercel/blob": "2.8.1"
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "db:migrate": "npm run migrate -w @proofline/db",
+    "start:api": "npm run start -w @proofline/api",
+    "start:web": "npm run start -w @proofline/web"
   }
 }

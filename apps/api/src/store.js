@@ -1,15 +1,11 @@
 const crypto = require('crypto');
-const fs = require('fs');
+const db = require('@proofline/db');
+const media = require('./media');
 
 const MASTER_EMAIL = 'jon@ojsolutions.io';
-const PATHNAME = 'proofline/workspace.json';
 
 function emptyWorkspace(){
-  return { users: [], brands: [], designs: [], plans: [], notes: [] };
-}
-
-function storeFile(){
-  return process.env.PROOFLINE_STORE || '/tmp/proofline-workspace.json';
+  return db.emptyWorkspace();
 }
 
 function hashPassword(password, salt){
@@ -114,51 +110,8 @@ function viewFor(user, ws){
   };
 }
 
-async function readBlob(){
-  const blob = require('@vercel/blob');
-  try {
-    const result = await blob.get(PATHNAME, { access: 'private', useCache: false });
-    if (!result || result.statusCode !== 200 || !result.stream) return null;
-    const text = await new Response(result.stream).text();
-    return JSON.parse(text);
-  } catch (err) {
-    const missing = err && (err.name === 'BlobNotFoundError' || err.status === 404 || /not found/i.test(String(err.message || '')));
-    if (missing) return null;
-    throw err;
-  }
-}
-
-async function writeBlob(ws){
-  const blob = require('@vercel/blob');
-  await blob.put(PATHNAME, JSON.stringify(ws), {
-    access: 'private',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: 'application/json'
-  });
-}
-
-function readFile(){
-  try {
-    return JSON.parse(fs.readFileSync(storeFile(), 'utf8'));
-  } catch (err) {
-    if (err && err.code === 'ENOENT') return null;
-    throw err;
-  }
-}
-
-function writeFile(ws){
-  fs.writeFileSync(storeFile(), JSON.stringify(ws));
-}
-
 async function readRaw(){
-  if (process.env.BLOB_READ_WRITE_TOKEN) return readBlob();
-  return readFile();
-}
-
-async function writeRaw(ws){
-  if (process.env.BLOB_READ_WRITE_TOKEN) return writeBlob(ws);
-  return writeFile(ws);
+  return db.loadWorkspace();
 }
 
 function makeMaster(password){
@@ -189,8 +142,9 @@ function update(mutator){
       ws.users.unshift(makeMaster(process.env.MASTER_PASSWORD || ''));
     }
     const next = await mutator(ws);
-    const save = next === undefined ? ws : next;
-    if (JSON.stringify(save) !== before) await writeRaw(save);
+    const draft = next === undefined ? ws : next;
+    const save = await media.externalizeWorkspace(draft);
+    if (JSON.stringify(save) !== before) await db.saveWorkspace(save);
     return save;
   });
   chain = run.then(() => {}, () => {});

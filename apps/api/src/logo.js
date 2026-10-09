@@ -1,5 +1,5 @@
-const store = require('../lib/store');
-const logo = require('../lib/logo');
+const store = require('./store');
+const logo = require('./fetch-logo');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });

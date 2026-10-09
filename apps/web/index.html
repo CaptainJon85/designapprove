@@ -1408,7 +1408,12 @@ class Component extends DCLogic {
       users:(s.users||[]).map(u=>({id:u.id, name:u.name, email:u.email, kind:u.kind, master:!!u.master, roles:u.roles||{}}))
     };
     fetch('./api/workspace', {method:'PUT', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)})
-      .then(r=>{ if(!r.ok) this.flash('Could not save. Try again.'); })
+      .then(r=>r.json().then(data=>({ok:r.ok, data})).catch(()=>({ok:r.ok, data:null})))
+      .then(({ok, data})=>{
+        if(!ok){ this.flash('Could not save. Try again.'); return; }
+        const brands=data&&data.workspace&&data.workspace.brands;
+        if(brands) this.setState({brands});
+      })
       .catch(()=>this.flash('Could not save. Try again.'));
   }
   applyWorkspace(data){
