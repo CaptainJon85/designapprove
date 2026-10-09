@@ -1,5 +1,5 @@
-// Delivers the designer email. Set RESEND_API_KEY and NOTIFY_FROM on Vercel.
-// NOTIFY_FROM must be a sender Resend has verified, for example "Proofline <reviews@yourdomain.com>".
+// Delivers the designer email. Set RESEND_API_KEY on Vercel.
+// NOTIFY_FROM is optional. The default sender is on the verified domain proofline.ojsolutions.io.
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
   const key = process.env.RESEND_API_KEY;
   if (!key) return res.status(200).json({ sent: false, queued: true });
 
-  const from = process.env.NOTIFY_FROM || 'Proofline <onboarding@resend.dev>';
+  const from = process.env.NOTIFY_FROM || 'Proofline <notifications@proofline.ojsolutions.io>';
   try {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
