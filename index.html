@@ -297,7 +297,8 @@
     <div style="font-size:11px;color:var(--color-neutral-600);padding:var(--space-3) 10px 4px;display:flex;justify-content:space-between;align-items:center">Brands<span style="font-size:11px;color:var(--color-neutral-500)">{{ brandCount }}</span></div>
     <sc-for list="{{ brandNav }}" as="b" hint-placeholder-count="4">
       <button class="navbtn {{ b.on }}" onClick="{{ b.select }}">
-        <span style="width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;font-family:var(--font-heading);font-size:11px;color:#10141A;background: {{ b.shade }}">{{ b.tile }}</span>
+        <sc-if value="{{ b.hasLogo }}" hint-placeholder-val="{{ false }}"><img src="{{ b.logoUrl }}" alt="" style="width:22px;height:22px;flex:none;border-radius:50%;object-fit:cover"></sc-if>
+        <sc-if value="{{ b.noLogo }}" hint-placeholder-val="{{ true }}"><span style="width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;font-family:var(--font-heading);font-size:11px;color:#10141A;background: {{ b.shade }}">{{ b.tile }}</span></sc-if>
         {{ b.name }}
         <sc-if value="{{ b.hasAwaiting }}" hint-placeholder-val="{{ true }}"><span style="margin-left:auto;font-size:11px;color:var(--color-accent-700);font-weight:500">{{ b.awaiting }}</span></sc-if>
       </button>
@@ -410,7 +411,8 @@
               <sc-for list="{{ brandCards }}" as="b" hint-placeholder-count="4">
                 <div class="blueprint row-open" style="padding:var(--space-3)" onClick="{{ b.open }}">
                   <div style="display:flex;align-items:center;gap:10px">
-                    <span style="width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;font-family:var(--font-heading);font-size:12px;color:#10141A;background: {{ b.shade }}">{{ b.tile }}</span>
+                    <sc-if value="{{ b.hasLogo }}" hint-placeholder-val="{{ false }}"><img src="{{ b.logoUrl }}" alt="" style="width:30px;height:30px;flex:none;border-radius:50%;object-fit:cover"></sc-if>
+                    <sc-if value="{{ b.noLogo }}" hint-placeholder-val="{{ true }}"><span style="width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;font-family:var(--font-heading);font-size:12px;color:#10141A;background: {{ b.shade }}">{{ b.tile }}</span></sc-if>
                     <div style="font-family:var(--font-heading);font-weight:600;font-size:16px">{{ b.name }}</div>
                     <span style="margin-left:auto;font-size:12px;color:var(--color-neutral-600)">{{ b.total }} live</span>
                   </div>
@@ -1042,7 +1044,7 @@
               <tbody>
                 <sc-for list="{{ adminBrands }}" as="b" hint-placeholder-count="4">
                   <tr>
-                    <td><div style="display:flex;align-items:center;gap:9px"><span style="width:24px;height:24px;flex:none;border-radius:50%;display:grid;place-items:center;font-family:var(--font-heading);font-size:11px;color:#10141A;background: {{ b.shade }}">{{ b.tile }}</span><input class="input" style="min-height:32px;font-size:13px" value="{{ b.name }}" onInput="{{ b.onName }}"></div></td>
+                    <td><div style="display:flex;align-items:center;gap:9px"><label title="Upload logo" style="width:32px;height:32px;flex:none;border-radius:50%;overflow:hidden;display:grid;place-items:center;cursor:pointer;background: {{ b.shade }};position:relative"><sc-if value="{{ b.hasLogo }}" hint-placeholder-val="{{ false }}"><img src="{{ b.logoUrl }}" alt="" style="width:32px;height:32px;object-fit:cover;display:block"></sc-if><sc-if value="{{ b.noLogo }}" hint-placeholder-val="{{ true }}"><span style="font-family:var(--font-heading);font-size:11px;color:#10141A">{{ b.tile }}</span></sc-if><input type="file" accept="image/*,.svg" onChange="{{ b.onLogo }}" style="display:none"></label><input class="input" style="min-height:32px;font-size:13px" value="{{ b.name }}" onInput="{{ b.onName }}"></div></td>
                     <td>{{ b.members }}</td>
                     <td>{{ b.approvers }}</td>
                     <td>{{ b.total }}</td>
@@ -1697,6 +1699,39 @@ class Component extends DCLogic {
   setRole(uid, bid, role){ const u=this.state.users.find(x=>x.id===uid); if(!u) return; u.roles[bid]=role; this.bump(); this.flash('Role updated'); }
   blankBrand(){ return {id:'', name:'', tile:'', shade:'#B9DEFF', onShade:'#10141A', mute:'#24415F', guide:{logoName:'', logoUrl:'', colors:[], displayFont:'Urbanist', bodyFont:'Urbanist', dos:[], donts:[]}}; }
   renameBrand(id, name){ const b=this.brand(id); if(!b) return; b.name=name; this.bump(); }
+  uploadBrandLogo(id, e){
+    const f=e.target.files&&e.target.files[0];
+    e.target.value='';
+    if(!f) return;
+    const ok=/^image\//.test(f.type) || /\.svg$/i.test(f.name);
+    if(!ok){ this.flash('Upload an image for the logo.'); return; }
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const finish=(url)=>{
+        const b=this.brand(id);
+        if(!b) return;
+        if(!b.guide) b.guide={logoName:'', logoUrl:'', colors:[], displayFont:'Urbanist', bodyFont:'Urbanist', dos:[], donts:[]};
+        b.guide.logoName=f.name;
+        b.guide.logoUrl=url;
+        this.bump();
+        this.flash('Logo saved for '+b.name);
+      };
+      if(/svg/i.test(f.type) || /\.svg$/i.test(f.name)){ finish(reader.result); return; }
+      const img=new Image();
+      img.onload=()=>{
+        const max=256;
+        const scale=Math.min(1, max/Math.max(img.width, img.height));
+        const canvas=document.createElement('canvas');
+        canvas.width=Math.max(1, Math.round(img.width*scale));
+        canvas.height=Math.max(1, Math.round(img.height*scale));
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        finish(canvas.toDataURL('image/png'));
+      };
+      img.onerror=()=>finish(reader.result);
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(f);
+  }
   onInviteName(e){ this.setState({inviteName:e.target.value, inviteError:''}); }
   onInviteEmail(e){ this.setState({inviteEmail:e.target.value, inviteError:''}); }
   onInviteKind(e){ this.setState({inviteKind:e.target.value}); }
@@ -1842,7 +1877,8 @@ class Component extends DCLogic {
     const brandNav = visibleBrands.map(b=>{
       const awaiting=this.countFor(b.id, this.awaitingStates());
       const active = safeBrandId===b.id;
-      return { id:b.id, name:b.name, tile:b.tile, shade:b.shade, awaiting, hasAwaiting:awaiting>0,
+      const logo=(b.guide&&b.guide.logoUrl)||'';
+      return { id:b.id, name:b.name, tile:b.tile, shade:b.shade, logoUrl:logo, hasLogo:!!logo, noLogo:!logo, awaiting, hasAwaiting:awaiting>0,
         on: (active && ['queue','approved','calendar','guidelines','review','compare','plans','planDetail','feed'].includes(view))?'on':'',
         active,
         f: (active&&view==='feed')?'on':'',
@@ -1863,10 +1899,10 @@ class Component extends DCLogic {
       platShort: this.platShort(d),
       shade:b.shade, onShade:b.onShade, thumbWord:d.headline, open:()=>this.openDesign(d.id) }; });
 
-    const brandCards = visibleBrands.map(b=>({ id:b.id, name:b.name, tile:b.tile, shade:b.shade,
+    const brandCards = visibleBrands.map(b=>{ const logo=(b.guide&&b.guide.logoUrl)||''; return { id:b.id, name:b.name, tile:b.tile, shade:b.shade, logoUrl:logo, hasLogo:!!logo, noLogo:!logo,
       total: s.designs.filter(d=>d.brandId===b.id && !['Rejected/Archived'].includes(d.state)).length,
       awaiting:this.countFor(b.id,this.awaitingStates()), changes:this.countFor(b.id,['Changes Requested']), approved:this.countFor(b.id,['Approved']),
-      open:()=>this.selectBrand(b.id) }));
+      open:()=>this.selectBrand(b.id) }; });
 
     // queue
     const fmap={all:null, awaiting:this.awaitingStates(), changes:['Changes Requested'], approved:['Approved']};
@@ -1966,10 +2002,10 @@ class Component extends DCLogic {
     const unreadCount = myNotes.filter(n=>n.unread).length;
 
     // admin
-    const adminBrands = s.brands.map(b=>({ name:b.name, tile:b.tile, shade:b.shade, onName:(e)=>this.renameBrand(b.id, e.target.value),
+    const adminBrands = s.brands.map(b=>{ const logo=(b.guide&&b.guide.logoUrl)||''; return { name:b.name, tile:b.tile, shade:b.shade, logoUrl:logo, hasLogo:!!logo, noLogo:!logo, onName:(e)=>this.renameBrand(b.id, e.target.value), onLogo:(e)=>this.uploadBrandLogo(b.id, e),
       members: s.users.filter(u=>u.roles[b.id] && u.roles[b.id]!=='—').length,
       approvers: s.users.filter(u=>['Admin','Reviewer'].includes(u.roles[b.id])).length,
-      total: s.designs.filter(d=>d.brandId===b.id).length }));
+      total: s.designs.filter(d=>d.brandId===b.id).length }; });
     const brandHeads = s.brands.map(b=>b.tile);
     const userRows = s.users.map(u=>({ name:u.name, email:u.email, kind:u.kind==='client'?'Client':'Agency', setKind:(e)=>this.setKind(u.id, e.target.value), cells: s.brands.map(b=>({ role:u.roles[b.id]||'—', set:(e)=>this.setRole(u.id,b.id,e.target.value) })) }));
     const clientAccess = s.users.filter(u=>u.kind==='client').map(u=>{
