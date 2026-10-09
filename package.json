@@ -10,5 +10,8 @@
     "db:migrate": "npm run migrate -w @proofline/db",
     "start:api": "npm run start -w @proofline/api",
     "start:web": "npm run start -w @proofline/web"
+  },
+  "devDependencies": {
+    "railway": "^3.13.1"
   }
 }

@@ -1,4 +1,5 @@
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
@@ -24,11 +25,14 @@ function proxy(req, res){
     'x-forwarded-host': req.headers['x-forwarded-host'] || req.headers.host || '',
     'x-forwarded-proto': req.headers['x-forwarded-proto'] || (process.env.RAILWAY_ENVIRONMENT ? 'https' : 'http')
   });
-  const upstream = http.request(target, { method: req.method, headers }, upstreamRes => {
+  const transport = target.protocol === 'https:' ? https : http;
+  const family = target.hostname.endsWith('.railway.internal') ? 6 : undefined;
+  const upstream = transport.request(target, { method: req.method, headers, family }, upstreamRes => {
     res.writeHead(upstreamRes.statusCode || 502, upstreamRes.headers);
     upstreamRes.pipe(res);
   });
-  upstream.on('error', () => {
+  upstream.on('error', err => {
+    console.error('proxy', err.code || err.message, target.hostname, target.port);
     if (res.headersSent) return;
     res.writeHead(502, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'API unavailable' }));
@@ -58,5 +62,10 @@ function serve(req, res){
 }
 
 http.createServer(serve).listen(port, '0.0.0.0', () => {
-  console.log('Web listening on 0.0.0.0:' + port);
+  let origin = 'invalid';
+  try {
+    const parsed = new URL(apiOrigin);
+    origin = parsed.protocol + '//' + parsed.hostname + ':' + (parsed.port || (parsed.protocol === 'https:' ? '443' : '80'));
+  } catch (err) {}
+  console.log('Web listening on 0.0.0.0:' + port + ' api ' + origin);
 });
