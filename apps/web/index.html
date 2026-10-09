@@ -182,11 +182,17 @@
     .tabbar svg{width:18px;height:18px;stroke-width:1.6}
     .pair{grid-template-columns:1fr !important}
     .people-add{grid-template-columns:1fr !important}
+    .cal-scroll{overflow-x:auto}
     .input,textarea.input{font-size:16px}
     .dialog{border-radius:24px !important;padding:20px !important;max-height:min(92dvh,860px)}
     .install-banner{left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom))}
     .install-banner.above-tabs{bottom:calc(76px + env(safe-area-inset-bottom))}
   }
+  .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid var(--color-divider);border-left:1px solid var(--color-divider);min-width:720px}
+  .cal-head,.cal-cell{min-width:0;border-right:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider);box-sizing:border-box}
+  .cal-head{padding:8px 10px;font-size:11px;color:var(--color-neutral-600)}
+  .cal-cell{min-height:112px;padding:6px}
+  .cal-chip{margin-top:4px;padding:3px 6px;color:#10141A;font-size:11px;line-height:1.15;cursor:grab;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
   .install-banner{position:fixed;z-index:45;left:16px;right:16px;bottom:16px;background:var(--paper);border-radius:22px;box-shadow:var(--shadow-lg);padding:14px 14px 12px;display:flex;flex-direction:column;gap:8px}
 </style>
 </helmet>
@@ -823,24 +829,33 @@
     <!-- ═══════════ CALENDAR ═══════════ -->
     <sc-if value="{{ nav.isCalendar }}" hint-placeholder-val="{{ false }}">
       <div style="padding:var(--space-6)">
-        <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4)">
-          <h4 style="margin:0">July 2026</h4>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-3);flex-wrap:wrap">
+          <button type="button" class="btn btn-ghost" style="min-height:36px;padding:4px 12px" onClick="{{ calPrev }}">Prev</button>
+          <h4 style="margin:0;min-width:160px;text-align:center">{{ calLabel }}</h4>
+          <button type="button" class="btn btn-ghost" style="min-height:36px;padding:4px 12px" onClick="{{ calNext }}">Next</button>
           <span style="font-size:12px;color:var(--color-neutral-600)">{{ calSummary }}</span>
           <div style="margin-left:auto;display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;justify-content:flex-end;font-size:11px;color:var(--color-neutral-600)">
             <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;background:var(--color-accent)"></span>Approved, not posted</span>
             <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;background:var(--color-accent-300)"></span>Scheduled / posted</span>
             <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;background:var(--color-neutral-500)"></span>Planned, no artwork</span>
-            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border:1px solid var(--color-accent);background:color-mix(in srgb,var(--color-accent) 30%,var(--surface-2))"></span>Has posts</span>
           </div>
         </div>
-        <div class="blueprint" style="padding:0">
-          <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr))">
-            <sc-for list="{{ weekdayLabels }}" as="w" hint-placeholder-count="7"><div style="padding:8px 10px;font-size:11px;color:var(--color-neutral-600);border-bottom:1px solid var(--color-divider)">{{ w }}</div></sc-for>
+        <p style="font-size:12px;color:var(--color-neutral-600);margin:0 0 var(--space-3)">Drag a post onto a day to schedule it, or drag it to another day.</p>
+        <sc-if value="{{ calHasUnscheduled }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--space-3)">
+            <sc-for list="{{ calUnscheduled }}" as="p" hint-placeholder-count="2">
+              <div class="cal-chip" draggable="true" onDragStart="{{ p.drag }}" onClick="{{ p.open }}" style="margin:0;background:var(--color-accent)">{{ p.label }}</div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <div class="blueprint cal-scroll" style="padding:0">
+          <div class="cal-grid">
+            <sc-for list="{{ weekdayLabels }}" as="w" hint-placeholder-count="7"><div class="cal-head">{{ w }}</div></sc-for>
             <sc-for list="{{ calendarCells }}" as="c" hint-placeholder-count="35">
-              <div style="min-width:0;min-height:96px;padding:6px;border-right:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider);background: {{ c.bg }}">
+              <div class="cal-cell" style="background: {{ c.bg }}" onDragOver="{{ calDragOver }}" onDrop="{{ c.drop }}">
                 <div style="font-size:12px;color: {{ c.numColor }};font-family:var(--font-heading)">{{ c.day }}</div>
                 <sc-for list="{{ c.posts }}" as="p" hint-placeholder-count="0">
-                  <div class="row-open" onClick="{{ p.open }}" style="margin-top:4px;padding:3px 6px;background: {{ p.bg }};color:#10141A;font-size:11px;line-height:1.15;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">{{ p.label }}</div>
+                  <div class="cal-chip" draggable="true" onDragStart="{{ p.drag }}" onClick="{{ p.open }}" style="background: {{ p.bg }}">{{ p.label }}</div>
                 </sc-for>
               </div>
             </sc-for>
@@ -1077,7 +1092,7 @@
         </section>
         <section>
           <h4 style="margin:0 0 var(--space-3)">People &amp; roles</h4>
-          <p style="font-size:12px;color:var(--color-neutral-600);margin-top:0">Add the agency team and each client. Clients only see the brands you share below.</p>
+          <p style="font-size:12px;color:var(--color-neutral-600);margin-top:0">Add the agency team and each client. Type stays on the person. Brand roles wrap underneath, so more brands stay on the page.</p>
           <div class="blueprint" style="padding:var(--space-4);margin-bottom:var(--space-4)">
             <div class="people-add" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) 150px auto;gap:10px;align-items:end">
               <div class="field" style="min-width:0"><label>Name</label><input class="input" placeholder="Full name" value="{{ inviteName }}" onInput="{{ onInviteName }}"></div>
@@ -1088,21 +1103,34 @@
             <p style="font-size:12px;color:var(--color-neutral-600);margin:12px 0 0">We’ll email them a temporary password. They choose their own the first time they sign in.</p>
             <sc-if value="{{ hasInviteError }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;padding:10px 12px;border-radius:14px;background:#FFF0EF;color:#4E1414;font-size:13px">{{ inviteError }}</div></sc-if>
           </div>
-          <div class="blueprint" style="padding:0;overflow-x:auto">
-            <table class="table" style="min-width:720px">
-              <thead><tr><th style="width:28%">Person</th><th style="width:150px">Type</th><sc-for list="{{ brandHeads }}" as="h" hint-placeholder-count="4"><th style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">{{ h.name }}</th></sc-for></tr></thead>
-              <tbody>
-                <sc-for list="{{ userRows }}" as="u" hint-placeholder-count="5">
-                  <tr>
-                    <td style="vertical-align:middle"><div style="font-weight:500">{{ u.name }}</div><div style="font-size:11px;color:var(--color-neutral-600)">{{ u.email }}</div></td>
-                    <td style="vertical-align:middle;width:150px"><select class="input" style="min-height:44px;font-size:13px;width:100%" value="{{ u.kind }}" onChange="{{ u.setKind }}"><option>Agency</option><option>Client</option></select></td>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ userRows }}" as="u" hint-placeholder-count="3">
+              <div class="blueprint" style="padding:16px 18px">
+                <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+                  <div style="min-width:0;flex:1 1 220px">
+                    <div style="font-weight:500">{{ u.name }}</div>
+                    <div style="font-size:12px;color:var(--color-neutral-600);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ u.email }}</div>
+                  </div>
+                  <div class="field" style="width:160px;flex:none;margin:0">
+                    <label>Type</label>
+                    <select class="input" style="min-height:44px;font-size:13px;width:100%" value="{{ u.kind }}" onChange="{{ u.setKind }}"><option>Agency</option><option>Client</option></select>
+                  </div>
+                </div>
+                <sc-if value="{{ u.isAgency }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:14px">
                     <sc-for list="{{ u.cells }}" as="c" hint-placeholder-count="4">
-                      <td style="vertical-align:middle"><select class="input" style="min-height:44px;font-size:13px;width:100%" value="{{ c.role }}" onChange="{{ c.set }}"><option>Admin</option><option>Reviewer</option><option>Designer</option><option>Viewer</option><option>—</option></select></td>
+                      <div class="field" style="min-width:0;margin:0">
+                        <label style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</label>
+                        <select class="input" style="min-height:40px;font-size:13px;width:100%" value="{{ c.role }}" onChange="{{ c.set }}"><option>Admin</option><option>Reviewer</option><option>Designer</option><option>Viewer</option><option>—</option></select>
+                      </div>
                     </sc-for>
-                  </tr>
-                </sc-for>
-              </tbody>
-            </table>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ u.isClient }}" hint-placeholder-val="{{ false }}">
+                  <p style="font-size:12px;color:var(--color-neutral-600);margin:12px 0 0">{{ u.roleSummary }}. Choose the brands they can open in Client brand access.</p>
+                </sc-if>
+              </div>
+            </sc-for>
           </div>
         </section>
         <section style="margin-top:var(--space-8)">
@@ -1381,6 +1409,7 @@ class Component extends DCLogic {
       submitOpen:false, approveOpen:false, changesOpen:false, rejectOpen:false,
       panel:'comments', filter:'all', pinMode:false, planId:null, plans,
       pickerOpen:false, pickerMonth:6, subDay:null,
+      calYear:new Date().getFullYear(), calMonth:new Date().getMonth(),
       draft:null, commentText:'', generalText:'', changesNote:'', toast:null,
       subBrand:'', subTitle:'', subPlatform:'Instagram — Post', subDate:'', subCaption:'',
       subFormat:'single', subPlatforms:['Instagram'], subSlides:[], subCaptionLater:false, subError:'',
@@ -1527,7 +1556,31 @@ class Component extends DCLogic {
   selectBrand(id){ if(!this.guardBrand(id)) return; this.setState({brandId:id, view:'queue', filter:'all', menuOpen:false}); }
   goQueue(id){ if(!this.guardBrand(id)) return; this.setState({brandId:id, view:'queue', menuOpen:false}); }
   goApproved(id){ if(!this.guardBrand(id)) return; this.setState({brandId:id, view:'approved', menuOpen:false}); }
-  goCalendar(id){ if(!this.guardBrand(id)) return; this.setState({brandId:id, view:'calendar', menuOpen:false}); }
+  goCalendar(id){ if(!this.guardBrand(id)) return; const now=new Date(); this.setState({brandId:id, view:'calendar', menuOpen:false, calYear:this.state.calYear==null?now.getFullYear():this.state.calYear, calMonth:this.state.calMonth==null?now.getMonth():this.state.calMonth}); }
+  shiftCal(delta){ const next=new Date(this.state.calYear, this.state.calMonth+delta, 1); this.setState({calYear:next.getFullYear(), calMonth:next.getMonth()}); }
+  calDragStart(id, e){ if(e&&e.dataTransfer){ try{ e.dataTransfer.setData('text/plain', id); e.dataTransfer.effectAllowed='move'; }catch(err){} } this._calDrag=id; }
+  calDragOver(e){ if(e&&e.preventDefault) e.preventDefault(); if(e&&e.dataTransfer) e.dataTransfer.dropEffect='move'; }
+  calDrop(day, e){ if(e&&e.preventDefault) e.preventDefault(); const id=(this._calDrag)||(e&&e.dataTransfer&&e.dataTransfer.getData&&e.dataTransfer.getData('text/plain')); this._calDrag=''; if(!id||!day) return; this.scheduleOnDay(id, Number(day)); }
+  scheduleOnDay(id, day){
+    const d=this.design(id); if(!d||!day) return;
+    const b=this.brand(d.brandId);
+    if(this.isHeld(b)){ this.flash(b.name+' is on hold. Campaigns are paused.'); return; }
+    if(!['Approved','Scheduled/Posted'].includes(d.state)){ this.flash('Approve the design before scheduling it.'); return; }
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    d.postD=day; d.postMonth=this.state.calMonth; d.postYear=this.state.calYear;
+    if(d.state==='Approved') d.state='Scheduled/Posted';
+    d.history=d.history||[];
+    d.history.push({type:'sched', actor:'You', text:'scheduled for '+day+' '+months[this.state.calMonth]+' '+this.state.calYear, at:'just now', dot:'var(--color-neutral-600)'});
+    this.bump();
+    this.flash('Scheduled for '+day+' '+months[this.state.calMonth]+' '+this.state.calYear);
+  }
+  postWhen(d){
+    if(!d||!d.postD) return '—';
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const m=d.postMonth==null?6:Number(d.postMonth);
+    const y=d.postYear==null?2026:d.postYear;
+    return d.postD+' '+(months[m]||'Jul')+' '+y;
+  }
   goFeed(id){ if(!this.guardBrand(id)) return; this.setState({brandId:id, view:'feed', menuOpen:false}); }
   goPlans(id){ if(!this.guardBrand(id)) return; this.setState({brandId:id, view:'plans', menuOpen:false}); }
   openPlan(id){ const p=this.state.plans.find(x=>x.id===id); if(!p||!this.guardBrand(p.brandId)) return; this.setState({view:'planDetail', planId:id, brandId:p.brandId}); }
@@ -1688,7 +1741,7 @@ class Component extends DCLogic {
     const caption=slides.map(sl=>sl.caption).filter(Boolean).join('\n\n');
     const d={ id:'d'+Date.now(), brandId:b.id, title:t, kicker:'New', headline:t.split(' ').slice(0,3).join(' ')||'New post', sub:'', cta:'Learn more',
       platform:platforms.join(' · '), platforms, format, slides, captionLater: this.state.subCaptionLater || slides.some(sl=>!sl.caption),
-      aspect: onlyLi?'1200 / 628':'1 / 1', campaign:'—', submitter:(this.currentUser()||{}).name||'You', submitterId:this.state.sessionId, state:'Submitted', age:0, postD: parseInt(this.state.subDate)||null,
+      aspect: onlyLi?'1200 / 628':'1 / 1', campaign:'—', submitter:(this.currentUser()||{}).name||'You', submitterId:this.state.sessionId, state:'Submitted', age:0, postD: parseInt(this.state.subDate)||null, postMonth: this.state.subDate?this.state.pickerMonth:null, postYear: this.state.subDate?2026:null,
       caption, locked:false, comments:[], versions:[{n:1, by:'You', at:'just now', note:'Initial submission'}],
       history:[{type:'submit', actor:'You', text:'submitted the design', at:'just now', dot:'var(--color-accent)'}] };
     this.state.designs.unshift(d);
@@ -2066,7 +2119,7 @@ class Component extends DCLogic {
       const needsCaption=slides.some(sl=>!(sl.caption||'').trim());
       sd={ id:d.id, title:d.title, brandName:b.name, platform:this.platformNames(d).join(' · ')||d.platform, vcount:d.versions.length,
         statusClass:t.cls, stateLabel:t.label, shade:b.shade, aspect:d.aspect, kicker:d.kicker, headline:d.headline, sub:d.sub, cta:d.cta,
-        pins, commentList, versionList, historyList, caption:d.caption||'—', campaign:d.campaign, postLabel: d.postD?(d.postD+' Jul'):'—',
+        pins, commentList, versionList, historyList, caption:d.caption||'—', campaign:d.campaign, postLabel: this.postWhen(d),
         locked:!!d.locked, actionable: !d.locked && d.state!=='Scheduled/Posted', approvedBy:d.approvedBy||'', noComments: activeComments.length===0,
         approved: ['Approved','Scheduled/Posted'].includes(d.state), archived: d.state==='Rejected/Archived', rejectedReason: d.rejectedReason||'archived',
         submitter:d.submitter, onShade:b.onShade, mute:b.mute,
@@ -2092,25 +2145,37 @@ class Component extends DCLogic {
 
     // approved to post (current brand)
     const approvedList = s.designs.filter(x=>x.brandId===cur && x.state==='Approved').map(d=>{ const b=this.brand(d.brandId); return {
-      id:d.id, title:d.title, headline:d.headline, kicker:d.kicker, shade:b.shade, onShade:b.onShade, mute:b.mute, approvedAt:d.approvedAt||'recently', postLabel:d.postD?(d.postD+' Jul'):'—',
+      id:d.id, title:d.title, headline:d.headline, kicker:d.kicker, shade:b.shade, onShade:b.onShade, mute:b.mute, approvedAt:d.approvedAt||'recently', postLabel:this.postWhen(d),
       exportFn:()=>this.exportFile(), schedule:()=>this.scheduleDesign(d.id) }; });
 
-    // calendar (current brand): July 2026 starts Wednesday (Jul 1 = Wed)
+    // calendar (current brand): real month, drag a post onto a day
     const weekdayLabels=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    const firstDow=3; const daysIn=31; const cells=[];
-    for(let i=0;i<firstDow;i++) cells.push({day:'', bg:'transparent', numColor:'transparent', posts:[]});
-    const calDesigns = s.designs.filter(x=>x.brandId===cur && ['Approved','Scheduled/Posted'].includes(x.state) && x.postD);
-    const calPlan = s.plans.find(p=>p.brandId===cur && p.month.indexOf('July')===0);
-    const TODAY=27;
+    const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const now=new Date();
+    const calYear=s.calYear==null?now.getFullYear():s.calYear;
+    const calMonth=s.calMonth==null?now.getMonth():s.calMonth;
+    const firstDow=new Date(calYear, calMonth, 1).getDay();
+    const daysIn=new Date(calYear, calMonth+1, 0).getDate();
+    const placed=(d)=>{ if(!d.postD) return null; return { year:d.postYear==null?2026:Number(d.postYear), month:d.postMonth==null?6:Number(d.postMonth), day:Number(d.postD) }; };
+    const inView=(d)=>{ const p=placed(d); return !!(p && p.year===calYear && p.month===calMonth); };
+    const schedulable=s.designs.filter(x=>x.brandId===cur && ['Approved','Scheduled/Posted'].includes(x.state));
+    const calDesigns=schedulable.filter(inView);
+    const calUnscheduled=schedulable.filter(x=>!inView(x)).map(d=>({ id:d.id, label:d.title, drag:(e)=>this.calDragStart(d.id, e), open:()=>this.openDesign(d.id) }));
+    const calPlan=s.plans.find(p=>p.brandId===cur && String(p.month||'').indexOf(monthNames[calMonth]+' '+calYear)===0);
+    const cells=[];
+    const blank=()=>({day:'', bg:'transparent', numColor:'transparent', posts:[], drop:()=>{}});
+    for(let i=0;i<firstDow;i++) cells.push(blank());
     for(let day=1; day<=daysIn; day++){
-      const posts=calDesigns.filter(x=>x.postD===day).map(d=>({ label:d.title, bg: d.state==='Scheduled/Posted'?'var(--color-accent-300)':'var(--color-accent)', open:()=>this.openDesign(d.id) }));
-      const planned = calPlan? calPlan.rows.filter(r=>r.d===day && !s.designs.some(x=>x.brandId===cur && x.postD===day && ['Approved','Scheduled/Posted'].includes(x.state))).map(r=>({ label:r.concept, bg:'var(--color-neutral-500)', open:()=>this.goPlans(cur) })) : [];
+      const posts=calDesigns.filter(x=>Number(x.postD)===day).map(d=>({ label:d.title, bg: d.state==='Scheduled/Posted'?'var(--color-accent-300)':'var(--color-accent)', open:()=>this.openDesign(d.id), drag:(e)=>this.calDragStart(d.id, e) }));
+      const planned=calPlan? calPlan.rows.filter(r=>r.d===day && !calDesigns.some(x=>Number(x.postD)===day)).map(r=>({ label:r.concept, bg:'var(--color-neutral-500)', open:()=>this.goPlans(cur), drag:(e)=>{ if(e&&e.preventDefault) e.preventDefault(); } })) : [];
       const all=posts.concat(planned);
-      const isToday=day===TODAY;
+      const isToday=day===now.getDate() && calMonth===now.getMonth() && calYear===now.getFullYear();
       cells.push({ day:String(day), bg: all.length? 'color-mix(in srgb,var(--color-accent) 9%,var(--color-bg))' : (isToday?'color-mix(in srgb,var(--color-accent) 4%,transparent)':'transparent'),
-        numColor: isToday?'var(--color-accent-800)':(all.length?'var(--color-accent-800)':'var(--color-neutral-600)'), posts:all }); }
-    const plannedCount = calPlan? calPlan.rows.length : 0;
-    const calSummary = calDesigns.length+' scheduled · '+plannedCount+' planned this month';
+        numColor: isToday?'var(--color-accent-800)':(all.length?'var(--color-accent-800)':'var(--color-neutral-600)'), posts:all, drop:(e)=>this.calDrop(day, e) }); }
+    while(cells.length%7) cells.push(blank());
+    const plannedCount=calPlan? calPlan.rows.length : 0;
+    const calSummary=calDesigns.length+' scheduled · '+plannedCount+' planned this month';
+    const calLabel=monthNames[calMonth]+' '+calYear;
 
     // notifications
     const ICON_PATH={
@@ -2135,7 +2200,14 @@ class Component extends DCLogic {
       approvers: s.users.filter(u=>['Admin','Reviewer'].includes(u.roles[b.id])).length,
       total: s.designs.filter(d=>d.brandId===b.id).length }; });
     const brandHeads = s.brands.map(b=>({ name:b.name, tile:b.tile }));
-    const userRows = s.users.map(u=>({ name:u.name, email:u.email, kind:u.kind==='client'?'Client':'Agency', setKind:(e)=>this.setKind(u.id, e.target.value), cells: s.brands.map(b=>({ role:u.roles[b.id]||'—', set:(e)=>this.setRole(u.id,b.id,e.target.value) })) }));
+    const userRows = s.users.map(u=>{
+      const isClient=u.kind==='client';
+      const granted=s.brands.filter(b=>(u.roles[b.id]||'—')!=='—').length;
+      return { name:u.name, email:u.email, kind:isClient?'Client':'Agency', isClient, isAgency:!isClient,
+        roleSummary: granted? (granted+' brand'+(granted===1?'':'s')) : 'No brands yet',
+        setKind:(e)=>this.setKind(u.id, e.target.value),
+        cells: s.brands.map(b=>({ name:b.name, role:u.roles[b.id]||'—', set:(e)=>this.setRole(u.id,b.id,e.target.value) })) };
+    });
     const clientAccess = s.users.filter(u=>u.kind==='client').map(u=>{
       const granted = s.brands.filter(b=>this.canSeeBrand(u, b.id));
       return {
@@ -2176,7 +2248,7 @@ class Component extends DCLogic {
     const cbObj = (cur? this.brand(cur) : null) || visibleBrands[0] || s.brands[0] || this.blankBrand();
     const feedRaw = s.designs.filter(x=>x.brandId===cur && ['Approved','Scheduled/Posted'].includes(x.state))
       .slice().sort((a,b)=>(b.postD||0)-(a.postD||0));
-    const feedList = feedRaw.map(x=>({ shade:this.brand(x.brandId).shade, onShade:this.brand(x.brandId).onShade, mute:this.brand(x.brandId).mute, kicker:x.kicker, headline:x.headline, day: x.postD? (x.postD+' Jul'):'TBD', open:()=>this.openDesign(x.id) }));
+    const feedList = feedRaw.map(x=>({ shade:this.brand(x.brandId).shade, onShade:this.brand(x.brandId).onShade, mute:this.brand(x.brandId).mute, kicker:x.kicker, headline:x.headline, day: x.postD? this.postWhen(x) : 'TBD', open:()=>this.openDesign(x.id) }));
     const feedPlatforms = new Set(feedRaw.map(x=>x.platform)).size;
     const planForBrand = s.plans.find(p=>p.brandId===cur && p.month.indexOf('July')===0);
     const feedGaps = planForBrand? planForBrand.rows.filter(r=>r.art==='Not started').length : 0;
@@ -2272,7 +2344,9 @@ class Component extends DCLogic {
       feedCountLabel: feedList.length+' post'+(feedList.length===1?'':'s')+' scheduled',
       feedPlatforms, feedGaps, feedAdvice,
       feedBrand: cbObj.name, feedTile: cbObj.tile, feedShade: cbObj.shade, feedHandle: handleFor(cbObj),
-      weekdayLabels, calendarCells:cells, calSummary,
+      weekdayLabels, calendarCells:cells, calSummary, calLabel,
+      calPrev:()=>this.shiftCal(-1), calNext:()=>this.shiftCal(1),
+      calUnscheduled, calHasUnscheduled:calUnscheduled.length>0, calDragOver:(e)=>this.calDragOver(e),
       planList, pd, backToPlans:()=>this.backToPlans(), uploadPlan:()=>this.uploadPlan(), planApprove:()=>this.planApprove(), planChanges:()=>this.planChanges(),
       dowMini:['S','M','T','W','T','F','S'], pickerCells, pickerOpen:s.pickerOpen, pickerMonthLabel:pm.label,
       togglePicker:()=>this.togglePicker(), pickerPrev:()=>this.pickerPrev(), pickerNext:()=>this.pickerNext(),
